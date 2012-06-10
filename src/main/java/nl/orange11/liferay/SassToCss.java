@@ -51,7 +51,7 @@ public class SassToCss extends ConventionTask {
                      .setLocation(dep);
         }
 
-        javaTask.setProject(antProject); // needed because the javatask calls getProject().getDefaultInputStream()
+        javaTask.setProject(antProject);
         javaTask.setClasspath(classPath);
 
         javaTask.setFork(true);
