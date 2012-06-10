@@ -9,13 +9,13 @@ import java.io.File;
 /**
  * @author Jelmer Kuperus
  */
-public class ServiceBuilderPluginConvention {
+public class ServiceBuilderPluginExtension {
 
     private final Project project;
 
     private String serviceInputFileName;
 
-    public ServiceBuilderPluginConvention(Project project) {
+    public ServiceBuilderPluginExtension(Project project) {
         this.project = project;
     }
 

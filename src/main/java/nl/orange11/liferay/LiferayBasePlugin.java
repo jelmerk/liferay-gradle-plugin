@@ -20,12 +20,12 @@ public class LiferayBasePlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPlugins().apply(WarPlugin.class);
-        createLiferayConvention(project);
+        createLiferayExtension(project);
         configureDeploy(project);
     }
 
-    private void createLiferayConvention(Project project) {
-        project.getConvention().getPlugins().put("liferay", new LiferayPluginConvention(project));
+    private void createLiferayExtension(Project project) {
+        project.getExtensions().create("liferay", LiferayPluginExtension.class, project);
     }
 
     private void configureDeploy(Project project) {
@@ -35,13 +35,11 @@ public class LiferayBasePlugin implements Plugin<Project> {
         deploy.setDescription("Deploys the plugin");
         deploy.setGroup(LiferayBasePlugin.LIFERAY_GROUP);
 
-
-        final LiferayPluginConvention liferayConvention = project.getConvention()
-                .getPlugin(LiferayPluginConvention.class);
+        final LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
 
         deploy.getConventionMapping().map("autoDeployDir", new Callable<File>() {
             public File call() throws Exception {
-                return liferayConvention.getAutoDeployDir();
+                return liferayExtension.getAutoDeployDir();
             }
         });
         deploy.getConventionMapping().map("warFile", new Callable<File>() {

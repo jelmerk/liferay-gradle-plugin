@@ -21,7 +21,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        createServiceBuilderConvention(project);
+        createServiceBuilderExtension(project);
 
         JavaPluginConvention javaConvention = (JavaPluginConvention) project
                 .getConvention().getPlugins().get("java");
@@ -31,8 +31,8 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         configureBuildServiceTask(project);
     }
 
-    private void createServiceBuilderConvention(Project project) {
-        project.getConvention().getPlugins().put("servicebuilder", new LiferayPluginConvention(project));
+    private void createServiceBuilderExtension(Project project) {
+        project.getExtensions().create("servicebuilder", ServiceBuilderPluginExtension.class, project);
     }
 
     private void configureServiceBuilderSourceSets(JavaPluginConvention pluginConvention) {

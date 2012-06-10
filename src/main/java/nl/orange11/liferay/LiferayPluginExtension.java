@@ -18,7 +18,7 @@ import static java.util.Arrays.asList;
 /**
  * @author Jelmer Kuperus
  */
-public class LiferayPluginConvention {
+public class LiferayPluginExtension {
 
     private final Project project;
 
@@ -28,7 +28,7 @@ public class LiferayPluginConvention {
 
     private String autoDeployDirName;
 
-    public LiferayPluginConvention(Project project) {
+    public LiferayPluginExtension(Project project) {
         this.project = project;
     }
 
