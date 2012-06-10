@@ -1,0 +1,22 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'idea'
+
+group = 'nl.orange11.liferay'
+archivesBaseName = 'liferay-plugin'
+version = '0.0.1-SNAPSHOT'
+description = 'Liferay plugin for Gradle'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile gradleApi()
+
+    compile 'javax.servlet:servlet-api:2.5'
+    compile 'javax.servlet.jsp:jsp-api:2.1'
+    compile 'javax.activation:activation:1.1'
+
+}
