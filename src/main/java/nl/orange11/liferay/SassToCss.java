@@ -6,6 +6,7 @@ import org.apache.tools.ant.types.Path;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.ConventionTask;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
@@ -15,7 +16,8 @@ import java.io.File;
  */
 public class SassToCss extends ConventionTask {
 
-    private FileCollection portalClasspath;
+    @InputFiles
+    private FileCollection classpath;
 
     private File appServerPortalDir;
 
@@ -28,8 +30,8 @@ public class SassToCss extends ConventionTask {
             throw new InvalidUserDataException("Please specify a valid sassDir");
         }
 
-        if (getPortalClasspath() == null) {
-            throw new InvalidUserDataException("Please specify the portalClasspath");
+        if (getClasspath() == null) {
+            throw new InvalidUserDataException("Please specify the classpath");
         }
 
         if (getAppServerPortalDir() == null) {
@@ -44,15 +46,15 @@ public class SassToCss extends ConventionTask {
 
         Project antProject = getAnt().getAntProject();
 
-        Path classPath = new Path(antProject);
+        Path antClasspath = new Path(antProject);
 
-        for (File dep : getPortalClasspath()) {
-            classPath.createPathElement()
+        for (File dep : getClasspath()) {
+            antClasspath.createPathElement()
                      .setLocation(dep);
         }
 
         javaTask.setProject(antProject);
-        javaTask.setClasspath(classPath);
+        javaTask.setClasspath(antClasspath);
 
         javaTask.setFork(true);
         javaTask.setNewenvironment(true);
@@ -74,12 +76,12 @@ public class SassToCss extends ConventionTask {
         this.sassDir = sassDir;
     }
 
-    public FileCollection getPortalClasspath() {
-        return portalClasspath;
+    public FileCollection getClasspath() {
+        return classpath;
     }
 
-    public void setPortalClasspath(FileCollection portalClasspath) {
-        this.portalClasspath = portalClasspath;
+    public void setClasspath(FileCollection classpath) {
+        this.classpath = classpath;
     }
 
     public File getAppServerPortalDir() {
