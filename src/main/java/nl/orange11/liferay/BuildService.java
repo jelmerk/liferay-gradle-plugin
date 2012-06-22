@@ -7,8 +7,6 @@ import org.apache.tools.ant.types.Path;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.ConventionTask;
-import org.gradle.api.internal.file.UnionFileCollection;
-import org.gradle.api.internal.file.collections.SimpleFileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
@@ -20,13 +18,8 @@ import java.io.File;
  */
 public class BuildService extends ConventionTask {
 
-    private FileCollection projectClasspath;
-    private FileCollection portalClasspath;
-
     @InputFiles
-    private FileCollection sdkClasspath;
-
-    private File appServerGlobalLibDirName;
+    private FileCollection classpath;
 
     private File implSrcDir;
     private File apiSrcDir;
@@ -42,10 +35,13 @@ public class BuildService extends ConventionTask {
             throw new InvalidUserDataException("Please specify a serviceInputFile");
         }
 
+        if (getClasspath() == null) {
+            throw new InvalidUserDataException("Please specify a the classpath");
+        }
+
         if (!getServiceInputFile().exists()) {
             throw new InvalidUserDataException("ServiceInputFile " + getServiceInputFile() + " does not exist.");
         }
-
 
         Mkdir mkServicebuilderMainSourceSetDir = new Mkdir();
         mkServicebuilderMainSourceSetDir.setDir(getImplSrcDir());
@@ -65,21 +61,7 @@ public class BuildService extends ConventionTask {
 
         Path antClassPath = new Path(antProject);
 
-
-        SimpleFileCollection appserverClasspath = new SimpleFileCollection(
-                new File(appServerGlobalLibDirName, "commons-digester.jar"),
-                new File(appServerGlobalLibDirName, "commons-lang.jar"),
-                new File(appServerGlobalLibDirName, "easyconf.jar")
-        );
-
-        UnionFileCollection classPath = new UnionFileCollection();
-        classPath.add(getProjectClasspath());
-        classPath.add(getSdkClasspath());
-        classPath.add(getPortalClasspath());
-        classPath.add(appserverClasspath);
-
-
-        for (File dep : classPath) {
+        for (File dep : getClasspath()) {
             antClassPath.createPathElement()
                      .setLocation(dep);
         }
@@ -283,22 +265,6 @@ public class BuildService extends ConventionTask {
 
     }
 
-    public FileCollection getPortalClasspath() {
-        return portalClasspath;
-    }
-
-    public void setPortalClasspath(FileCollection portalClasspath) {
-        this.portalClasspath = portalClasspath;
-    }
-
-    public FileCollection getSdkClasspath() {
-        return sdkClasspath;
-    }
-
-    public void setSdkClasspath(FileCollection sdkClasspath) {
-        this.sdkClasspath = sdkClasspath;
-    }
-
     public File getServiceInputFile() {
         return serviceInputFile;
     }
@@ -339,19 +305,11 @@ public class BuildService extends ConventionTask {
         this.webappSrcDir = webappSrcDir;
     }
 
-    public File getAppServerGlobalLibDirName() {
-        return appServerGlobalLibDirName;
+    public FileCollection getClasspath() {
+        return classpath;
     }
 
-    public void setAppServerGlobalLibDirName(File appServerGlobalLibDirName) {
-        this.appServerGlobalLibDirName = appServerGlobalLibDirName;
-    }
-
-    public FileCollection getProjectClasspath() {
-        return projectClasspath;
-    }
-
-    public void setProjectClasspath(FileCollection projectClasspath) {
-        this.projectClasspath = projectClasspath;
+    public void setClasspath(FileCollection classpath) {
+        this.classpath = classpath;
     }
 }

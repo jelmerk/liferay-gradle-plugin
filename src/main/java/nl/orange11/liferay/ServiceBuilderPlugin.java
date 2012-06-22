@@ -3,19 +3,20 @@ package nl.orange11.liferay;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
+import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency;
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact;
 import org.gradle.api.internal.file.UnionFileCollection;
+import org.gradle.api.internal.file.collections.SimpleFileCollection;
 import org.gradle.api.internal.plugins.DefaultArtifactPublicationSet;
-import org.gradle.api.internal.plugins.DslObject;
-import org.gradle.api.plugins.*;
+import org.gradle.api.plugins.BasePlugin;
+import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.WarPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.api.tasks.Upload;
 import org.gradle.api.tasks.bundling.Jar;
 
 import java.io.File;
@@ -29,7 +30,7 @@ import static java.lang.String.format;
 public class ServiceBuilderPlugin implements Plugin<Project> {
 
     public static final String BUILD_SERVICE = "build-service";
-    public static final String INSTALL_SERVICE = "install-service";
+
     public static final String JAR_SERVICE = "jar-service";
 
     public static final String SERVICE_BUILDER_SOURCE_SET_NAME = "service";
@@ -90,11 +91,12 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
 
 
-        main.getCompileClasspath().add(project.files(serviceBuilder.getOutput()));
-        main.getRuntimeClasspath().add(project.files(serviceBuilder.getOutput()));
+//        main.getCompileClasspath().add(project.files(serviceBuilder.getOutput()));
+//        main.getRuntimeClasspath().add(project.files(serviceBuilder.getOutput()));
+//
+//        test.getCompileClasspath().add(project.files(serviceBuilder.getOutput()));
+//        test.getRuntimeClasspath().add(project.files(serviceBuilder.getOutput()));
 
-        test.getCompileClasspath().add(project.files(serviceBuilder.getOutput()));
-        test.getRuntimeClasspath().add(project.files(serviceBuilder.getOutput()));
     }
 
     private void configureArchives(Project project) {
@@ -128,26 +130,6 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
     }
 
-
-//    private void configureInstallServiceTask(final Project project) {
-//
-//        Upload installServiceTask = project.getTasks().add(INSTALL_SERVICE, Upload.class);
-//
-//        Configuration configuration = project.getConfigurations().getByName(Dependency.ARCHIVES_CONFIGURATION);
-//        installServiceTask.setConfiguration(configuration);
-//
-//        MavenRepositoryHandlerConvention repositories = new DslObject(installServiceTask.getRepositories())
-//                .getConvention().getPlugin(MavenRepositoryHandlerConvention.class);
-//
-//        repositories.mavenInstaller();
-//        installServiceTask.setDescription("Does a maven install of the archives artifacts into the local .m2 cache.");
-//
-//
-//        Task installTask = project.getTasks().getByName(MavenPlugin.INSTALL_TASK_NAME);
-//        install.dependsOn(installTask);
-//
-//    }
-
     private void configureTaskRule(final Project project) {
         project.getTasks().withType(BuildService.class, new Action<BuildService>() {
             @Override
@@ -166,7 +148,6 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
     protected void configureTask(final Project project, final BuildService buildService) {
 
-
         final LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
 
         final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
@@ -180,13 +161,6 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         final SourceDirectorySet allMainJava = mainSourceSet.getAllJava();
         final SourceDirectorySet allServiceBuilderJava = servicebuilderSourceSet.getAllJava();
         final SourceDirectorySet allResources = mainSourceSet.getResources();
-
-        buildService.getConventionMapping().map("portalClasspath", new Callable<FileCollection>() {
-            @Override
-            public FileCollection call() throws Exception {
-                return liferayExtension.getPortalClasspath();
-            }
-        });
 
         buildService.getConventionMapping().map("serviceInputFile", new Callable<File>() {
             @Override
@@ -223,52 +197,45 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
             }
         });
 
-        buildService.getConventionMapping().map("appServerGlobalLibDirName", new Callable<File>() {
-            @Override
-            public File call() throws Exception {
-                return liferayExtension.getAppServerGlobalLibDir();
-            }
-        });
-
-        buildService.getConventionMapping().map("projectClasspath", new Callable<FileCollection>() {
-            @Override
-            public FileCollection call() throws Exception {
-                return mainSourceSet.getCompileClasspath();
-            }
-        });
-
-        buildService.getConventionMapping().map("sdkClasspath", new Callable<FileCollection>() {
+        buildService.getConventionMapping().map("classpath", new Callable<FileCollection>() {
             @Override
             public FileCollection call() throws Exception {
 
                 Configuration servicebuilderConfiguration = project.getConfigurations().getByName("servicebuilder");
 
                 if (servicebuilderConfiguration.getDependencies().isEmpty()) {
+
+                    // the sdk dependencies : we will need to download those
+
                     project.getDependencies().add("servicebuilder", "com.thoughtworks.qdox:qdox:1.12");
                     project.getDependencies().add("servicebuilder", "jalopy:jalopy:1.5rc3");
                     project.getDependencies().add("servicebuilder", "javax.servlet:servlet-api:2.5");
                     project.getDependencies().add("servicebuilder", "javax.servlet.jsp:jsp-api:2.1");
                     project.getDependencies().add("servicebuilder", "javax.activation:activation:1.1");
+
+                    //  the portal classpath dependencies : we have those locally
+
+                    project.getDependencies().add("servicebuilder",
+                            new DefaultSelfResolvingDependency(liferayExtension.getPortalClasspath()));
+
+                    // the common classpath dependencies : we can get from the portal
+
+                    File appServerGlobalLibDirName = liferayExtension.getAppServerGlobalLibDir();
+
+                    SimpleFileCollection appserverClasspath = new SimpleFileCollection(
+                            new File(appServerGlobalLibDirName, "commons-digester.jar"),
+                            new File(appServerGlobalLibDirName, "commons-lang.jar"),
+                            new File(appServerGlobalLibDirName, "easyconf.jar")
+                    );
+
+                    project.getDependencies().add("servicebuilder",
+                            new DefaultSelfResolvingDependency(appserverClasspath));
+
                 }
 
                 return servicebuilderConfiguration;
             }
         });
-
-
-//        task.conventionMapping.with {
-//            jdependClasspath = {
-//                def config = project.configurations['jdepend']
-//                if (config.dependencies.empty) {
-//                    project.dependencies {
-//                        jdepend "jdepend:jdepend:$extension.toolVersion"
-//                        jdepend("org.apache.ant:ant-jdepend:1.8.2")
-//                    }
-//                }
-//                config
-//            }
-//        }
-
 
 
     }
