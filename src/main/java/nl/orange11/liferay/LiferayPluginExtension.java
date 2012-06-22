@@ -105,8 +105,8 @@ public class LiferayPluginExtension {
 
         List<File> classPath = new ArrayList<File>();
         classPath.add(portalClassesDir);
-        classPath.addAll(asList(portalLibDir.listFiles(new JarFilenameFilter())));
-        classPath.addAll(asList(getAppServerGlobalLibDir().listFiles(new JarFilenameFilter())));
+        classPath.addAll(asList(portalLibDir.listFiles(JarFilenameFilter.getInstance())));
+        classPath.addAll(asList(getAppServerGlobalLibDir().listFiles(JarFilenameFilter.getInstance())));
         classPath.addAll(pluginClasspath);
 
         return new SimpleFileCollection(classPath);
@@ -117,9 +117,25 @@ public class LiferayPluginExtension {
     }
 
     static class JarFilenameFilter implements FilenameFilter {
+
+        private static volatile JarFilenameFilter instance;
+
         @Override
         public boolean accept(File dir, String name) {
             return name != null && name.toLowerCase().endsWith(".jar");
         }
+
+        public static JarFilenameFilter getInstance() {
+            if (instance == null) {
+                synchronized (JarFilenameFilter.class) {
+                    if (instance == null) {
+                        instance = new JarFilenameFilter();
+                    }
+                }
+            }
+            return instance;
+        }
     }
+
+
 }

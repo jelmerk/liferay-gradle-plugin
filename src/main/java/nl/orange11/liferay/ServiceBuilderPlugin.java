@@ -6,7 +6,6 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
-import org.gradle.api.internal.artifacts.dependencies.DefaultSelfResolvingDependency;
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact;
 import org.gradle.api.internal.file.UnionFileCollection;
 import org.gradle.api.internal.file.collections.SimpleFileCollection;
@@ -215,8 +214,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
                     //  the portal classpath dependencies : we have those locally
 
-                    project.getDependencies().add("servicebuilder",
-                            new DefaultSelfResolvingDependency(liferayExtension.getPortalClasspath()));
+                    project.getDependencies().add("servicebuilder", liferayExtension.getPortalClasspath());
 
                     // the common classpath dependencies : we can get from the portal
 
@@ -228,8 +226,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
                             new File(appServerGlobalLibDirName, "easyconf.jar")
                     );
 
-                    project.getDependencies().add("servicebuilder",
-                            new DefaultSelfResolvingDependency(appserverClasspath));
+                    project.getDependencies().add("servicebuilder", appserverClasspath);
 
                 }
 
