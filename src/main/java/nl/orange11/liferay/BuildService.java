@@ -6,12 +6,10 @@ import org.apache.tools.ant.taskdefs.Mkdir;
 import org.apache.tools.ant.types.Path;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.SourceDirectorySet;
-import org.gradle.api.internal.AbstractTask;
-import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.plugins.WarPluginConvention;
-import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.internal.ConventionTask;
+import org.gradle.api.internal.file.UnionFileCollection;
+import org.gradle.api.internal.file.collections.SimpleFileCollection;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
 
@@ -20,17 +18,22 @@ import java.io.File;
 /**
  * @author Jelmer Kuperus
  */
-public class BuildService extends AbstractTask {
+public class BuildService extends ConventionTask {
 
-    private Project project;
-
+    private FileCollection projectClasspath;
     private FileCollection portalClasspath;
 
-    private File serviceInputFile;
+    @InputFiles
+    private FileCollection sdkClasspath;
 
-    public BuildService(Project project) {
-        this.project = project;
-    }
+    private File appServerGlobalLibDirName;
+
+    private File implSrcDir;
+    private File apiSrcDir;
+    private File resourceDir;
+    private File webappSrcDir;
+
+    private File serviceInputFile;
 
     @TaskAction
     public void buildService() {
@@ -40,32 +43,17 @@ public class BuildService extends AbstractTask {
         }
 
         if (!getServiceInputFile().exists()) {
-            throw new InvalidUserDataException("ServiceInputFile " + serviceInputFile + " does not exist.");
+            throw new InvalidUserDataException("ServiceInputFile " + getServiceInputFile() + " does not exist.");
         }
 
-        WarPluginConvention warConvention = getProject().getConvention().getPlugin(WarPluginConvention.class);
-        JavaPluginConvention javaConvention = getProject().getConvention().getPlugin(JavaPluginConvention.class);
-
-
-        SourceSetContainer sourceSets = javaConvention.getSourceSets();
-        SourceSet sourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-
-        SourceDirectorySet allJava = sourceSet.getAllJava();
-        SourceDirectorySet resources = sourceSet.getResources();
-
-        File resourcesDir = resources.getSingleFile();
-        File mainSourceSetDir = allJava.getSingleFile();
-        File servicebuilderMainSourceSetDir = new File("todo"); // TODO: figure out how to get this
-        File webappSourceDir = warConvention.getWebAppDir();
 
         Mkdir mkServicebuilderMainSourceSetDir = new Mkdir();
-        mkServicebuilderMainSourceSetDir.setDir(servicebuilderMainSourceSetDir);
+        mkServicebuilderMainSourceSetDir.setDir(getImplSrcDir());
         mkServicebuilderMainSourceSetDir.execute();
 
         Mkdir mkSqlDir = new Mkdir();
-        mkSqlDir.setDir(new File(webappSourceDir, "sql"));
+        mkSqlDir.setDir(new File(getWebappSrcDir(), "sql"));
         mkSqlDir.execute();
-
 
         Java javaTask = new Java();
         javaTask.setTaskName("service builder");
@@ -75,15 +63,29 @@ public class BuildService extends AbstractTask {
 
         Project antProject = getAnt().getAntProject();
 
-        Path classPath = new Path(antProject);
+        Path antClassPath = new Path(antProject);
 
-        for (File dep : getPortalClasspath()) {
-            classPath.createPathElement()
+
+        SimpleFileCollection appserverClasspath = new SimpleFileCollection(
+                new File(appServerGlobalLibDirName, "commons-digester.jar"),
+                new File(appServerGlobalLibDirName, "commons-lang.jar"),
+                new File(appServerGlobalLibDirName, "easyconf.jar")
+        );
+
+        UnionFileCollection classPath = new UnionFileCollection();
+        classPath.add(getProjectClasspath());
+        classPath.add(getSdkClasspath());
+        classPath.add(getPortalClasspath());
+        classPath.add(appserverClasspath);
+
+
+        for (File dep : classPath) {
+            antClassPath.createPathElement()
                      .setLocation(dep);
         }
 
         javaTask.setProject(antProject);
-        javaTask.setClasspath(classPath);
+        javaTask.setClasspath(antClassPath);
 
         javaTask.createArg()
                 .setLine("-Dexternal-properties=com/liferay/portal/tools/dependencies/portal-tools.properties");
@@ -96,55 +98,55 @@ public class BuildService extends AbstractTask {
 
         javaTask.createArg()
                 .setLine("service.hbm.file="
-                        + new File(resourcesDir, "META-INF/portlet-hbm.xml").getPath());
+                        + new File(getResourceDir(), "META-INF/portlet-hbm.xml").getPath());
 
         javaTask.createArg()
                 .setLine("service.orm.file="
-                        + new File(resourcesDir, "META-INF/portlet-orm.xml").getPath());
+                        + new File(getResourceDir(), "META-INF/portlet-orm.xml").getPath());
 
         javaTask.createArg()
                 .setLine("service.model.hints.file="
-                        + new File(resourcesDir, "META-INF/portlet-model-hints.xml").getPath());
+                        + new File(getResourceDir(), "META-INF/portlet-model-hints.xml").getPath());
 
         javaTask.createArg()
                 .setLine("service.spring.file="
-                        + new File(resourcesDir, "META-INF/portlet-spring.xml").getPath());
+                        + new File(getResourceDir(), "META-INF/portlet-spring.xml").getPath());
 
         javaTask.createArg()
                 .setLine("service.spring.base.file="
-                        + new File(resourcesDir, "META-INF/base-spring.xml").getPath());
+                        + new File(getResourceDir(), "META-INF/base-spring.xml").getPath());
 
         javaTask.createArg()
                 .setLine("service.spring.cluster.file="
-                        + new File(resourcesDir, "META-INF/cluster-spring.xml").getPath());
+                        + new File(getResourceDir(), "META-INF/cluster-spring.xml").getPath());
 
         javaTask.createArg()
                 .setLine("service.spring.dynamic.data.source.file="
-                        + new File(resourcesDir, "META-INF/dynamic-data-source-spring.xml").getPath());
+                        + new File(getResourceDir(), "META-INF/dynamic-data-source-spring.xml").getPath());
 
         javaTask.createArg()
                 .setLine("service.spring.hibernate.file="
-                        + new File(resourcesDir, "META-INF/hibernate-spring.xml").getPath());
+                        + new File(getResourceDir(), "META-INF/hibernate-spring.xml").getPath());
 
         javaTask.createArg()
                 .setLine("service.spring.infrastructure.file="
-                        + new File(resourcesDir, "META-INF/infrastructure-spring.xml").getPath());
+                        + new File(getResourceDir(), "META-INF/infrastructure-spring.xml").getPath());
 
         javaTask.createArg()
                 .setLine("service.spring.shard.data.source.file="
-                        + new File(resourcesDir, "META-INF/shard-data-source-spring.xml").getPath());
+                        + new File(getResourceDir(), "META-INF/shard-data-source-spring.xml").getPath());
 
         javaTask.createArg()
-                .setLine("service.api.dir=" + servicebuilderMainSourceSetDir.getPath());
+                .setLine("service.api.dir=" + getApiSrcDir().getPath());
 
         javaTask.createArg()
-                .setLine("service.impl.dir=" + mainSourceSetDir.getPath());
+                .setLine("service.impl.dir=" + getImplSrcDir().getPath());
 
         javaTask.createArg()
-                .setLine("service.json.file=" + new File(webappSourceDir, "js/service.js").getPath());
+                .setLine("service.json.file=" + new File(getWebappSrcDir(), "js/service.js").getPath());
 
         javaTask.createArg()
-                .setLine("service.sql.dir=" + new File(webappSourceDir, "WEB-INF/sql").getPath());
+                .setLine("service.sql.dir=" + new File(getWebappSrcDir(), "WEB-INF/sql").getPath());
 
         javaTask.createArg()
                 .setLine("service.sql.file=tables.sql");
@@ -168,13 +170,16 @@ public class BuildService extends AbstractTask {
                 .setLine("service.props.util=com.liferay.util.service.ServiceProps");
 
         javaTask.createArg()
-                .setLine("service.plugin.name=" + project.getName());
+                .setLine("service.plugin.name=" + "myplugin"); // TODO: probably should be something like the module name
 
         javaTask.execute();
 
         String output = antProject.getProperty("service.test.output"); // does this work?
 
-        if (output.contains("Error")) {
+
+        System.out.println("***********" + (output == null));
+        System.out.println("####" + output);
+        if (output != null && output.contains("Error")) {
             throw new TaskExecutionException(this, null);
         }
 
@@ -286,11 +291,67 @@ public class BuildService extends AbstractTask {
         this.portalClasspath = portalClasspath;
     }
 
+    public FileCollection getSdkClasspath() {
+        return sdkClasspath;
+    }
+
+    public void setSdkClasspath(FileCollection sdkClasspath) {
+        this.sdkClasspath = sdkClasspath;
+    }
+
     public File getServiceInputFile() {
         return serviceInputFile;
     }
 
     public void setServiceInputFile(File serviceInputFile) {
         this.serviceInputFile = serviceInputFile;
+    }
+
+    public File getImplSrcDir() {
+        return implSrcDir;
+    }
+
+    public void setImplSrcDir(File implSrcDir) {
+        this.implSrcDir = implSrcDir;
+    }
+
+    public File getApiSrcDir() {
+        return apiSrcDir;
+    }
+
+    public void setApiSrcDir(File apiSrcDir) {
+        this.apiSrcDir = apiSrcDir;
+    }
+
+    public File getResourceDir() {
+        return resourceDir;
+    }
+
+    public void setResourceDir(File resourceDir) {
+        this.resourceDir = resourceDir;
+    }
+
+    public File getWebappSrcDir() {
+        return webappSrcDir;
+    }
+
+    public void setWebappSrcDir(File webappSrcDir) {
+        this.webappSrcDir = webappSrcDir;
+    }
+
+    public File getAppServerGlobalLibDirName() {
+        return appServerGlobalLibDirName;
+    }
+
+    public void setAppServerGlobalLibDirName(File appServerGlobalLibDirName) {
+        this.appServerGlobalLibDirName = appServerGlobalLibDirName;
+    }
+
+    public FileCollection getProjectClasspath() {
+        return projectClasspath;
+    }
+
+    public void setProjectClasspath(FileCollection projectClasspath) {
+        this.projectClasspath = projectClasspath;
     }
 }

@@ -14,9 +14,4 @@ repositories {
 
 dependencies {
     compile gradleApi()
-
-    compile 'javax.servlet:servlet-api:2.5'
-    compile 'javax.servlet.jsp:jsp-api:2.1'
-    compile 'javax.activation:activation:1.1'
-
 }
