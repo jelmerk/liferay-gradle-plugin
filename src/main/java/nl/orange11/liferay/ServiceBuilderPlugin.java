@@ -6,12 +6,8 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
-import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact;
-import org.gradle.api.internal.file.UnionFileCollection;
 import org.gradle.api.internal.file.collections.SimpleFileCollection;
-import org.gradle.api.internal.plugins.DefaultArtifactPublicationSet;
 import org.gradle.api.plugins.BasePlugin;
-import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.WarPluginConvention;
 import org.gradle.api.tasks.SourceSet;
@@ -38,7 +34,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
 
-        createConfiguration(project);
+        createConfigurations(project);
         createServiceBuilderExtension(project);
         configureSourceSets(project);
         configureArchives(project);
@@ -49,13 +45,14 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         configureBuildServiceTask(project);
     }
 
-    private void createConfiguration(Project project) {
+    private void createConfigurations(Project project) {
 
-        Configuration configuration = project.getConfigurations().add("servicebuilder");
+        Configuration serviceBuilderConfiguration = project.getConfigurations().add("servicebuilder");
+        serviceBuilderConfiguration.setVisible(false);
+        serviceBuilderConfiguration.setDescription("The servicebuilder configuration");
 
-        configuration.setVisible(false);
-        configuration.setTransitive(true);
-        configuration.setDescription("The servicebuilder configuration");
+        Configuration serviceConfiguration = project.getConfigurations().add("service");
+        serviceConfiguration.setDescription("The service configuration");
     }
 
     private void createServiceBuilderExtension(Project project) {
@@ -74,34 +71,19 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
         SourceSet serviceBuilder = sourceSets.add(SERVICE_BUILDER_SOURCE_SET_NAME);
 
-        // TODO: do i want to give it the same classpath as the impl.. probably not since this will be added as
-        //       transitive dependencies to the service jar that should not depend on too much crap
 
-        serviceBuilder.setCompileClasspath(project.getConfigurations().getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME));
+        // either use this or : dependencies { project(path: ':',  configuration: 'service') } need to figure out what
+        // is preferable.. should we add some dependencies implicitly
 
-        // TODO: do we really need it to both ? it seems to be what happens in the java plugin for tests
-
-        UnionFileCollection compileClasspath = new UnionFileCollection();
-        compileClasspath.add(main.getCompileClasspath());
-        compileClasspath.add(project.files(serviceBuilder.getOutput()));
-
-        main.setCompileClasspath(compileClasspath);
-
-
-
-
-//        main.getCompileClasspath().add(project.files(serviceBuilder.getOutput()));
-//        main.getRuntimeClasspath().add(project.files(serviceBuilder.getOutput()));
-//
-//        test.getCompileClasspath().add(project.files(serviceBuilder.getOutput()));
-//        test.getRuntimeClasspath().add(project.files(serviceBuilder.getOutput()));
+//        project.getConfigurations().getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME)
+//                .getDependencies().add(new DefaultProjectDependency((ProjectInternal) project, "service",
+//                new ProjectDependenciesBuildInstruction(true)));
 
     }
 
     private void configureArchives(Project project) {
 
-        JavaPluginConvention pluginConvention = (JavaPluginConvention) project
-                .getConvention().getPlugins().get("java");
+        JavaPluginConvention pluginConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
 
         Jar jar = project.getTasks().add(JAR_SERVICE, Jar.class);
 
@@ -110,16 +92,8 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         jar.from(pluginConvention.getSourceSets().getByName(SERVICE_BUILDER_SOURCE_SET_NAME).getOutput());
         jar.setArchiveName(format("%s-service.jar", project.getName()));
 
-        project.getExtensions().getByType(DefaultArtifactPublicationSet.class)
-                .addCandidate(new ArchivePublishArtifact(jar));
-
-        project.getConfigurations().getByName(JavaPlugin.RUNTIME_CONFIGURATION_NAME).getArtifacts()
-                .add(new ArchivePublishArtifact(jar));
-
-        project.getArtifacts().add("servicebuilder", project.getTasks().getByName(JAR_SERVICE));
+        project.getArtifacts().add("service", project.getTasks().getByName(JAR_SERVICE));
     }
-
-
 
     private void configureBuildServiceTask(final Project project) {
 
@@ -137,12 +111,6 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
             }
         });
 
-//        TaskCollection<BuildService> tasks = project.getTasks().withType(BuildService.class);
-//        project.tasks.withType(taskType) { T task ->
-//            def prunedName = (task.name - taskBaseName ?: task.name)
-//            prunedName = prunedName[0].toLowerCase() + prunedName.substring(1)
-//            configureTaskDefaults(task, prunedName)
-//        }
     }
 
     protected void configureTask(final Project project, final BuildService buildService) {
