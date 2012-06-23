@@ -17,7 +17,7 @@ import java.util.concurrent.Callable;
  */
 public class PortletPlugin implements Plugin<Project> {
 
-    public static final String SASS_TO_CSS ="sass";
+    public static final String SASS_TO_CSS ="sassToCss";
 
     @Override
     public void apply(Project project) {

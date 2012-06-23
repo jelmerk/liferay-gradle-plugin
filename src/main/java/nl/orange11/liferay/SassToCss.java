@@ -16,7 +16,6 @@ import java.io.File;
  */
 public class SassToCss extends ConventionTask {
 
-    @InputFiles
     private FileCollection classpath;
 
     private File appServerPortalDir;
@@ -76,6 +75,7 @@ public class SassToCss extends ConventionTask {
         this.sassDir = sassDir;
     }
 
+    @InputFiles
     public FileCollection getClasspath() {
         return classpath;
     }

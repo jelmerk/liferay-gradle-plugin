@@ -28,9 +28,9 @@ import static java.lang.String.format;
  */
 public class ServiceBuilderPlugin implements Plugin<Project> {
 
-    public static final String BUILD_SERVICE = "build-service";
+    public static final String BUILD_SERVICE = "buildService";
 
-    public static final String JAR_SERVICE = "jar-service";
+    public static final String JAR_SERVICE = "jarService";
 
     public static final String SERVICE_BUILDER_SOURCE_SET_NAME = "service";
 
@@ -149,6 +149,9 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
         final LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
 
+        final ServiceBuilderPluginExtension serviceBuilderExtension = project.getExtensions()
+                .getByType(ServiceBuilderPluginExtension.class);
+
         final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
 
         final JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
@@ -161,10 +164,33 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         final SourceDirectorySet allServiceBuilderJava = servicebuilderSourceSet.getAllJava();
         final SourceDirectorySet allResources = mainSourceSet.getResources();
 
+        buildService.getConventionMapping().map("pluginName", new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                return project.getName();
+            }
+        });
+
+
         buildService.getConventionMapping().map("serviceInputFile", new Callable<File>() {
             @Override
             public File call() throws Exception {
+
+                if (serviceBuilderExtension.getServiceInputFileName() != null) {
+                    return project.file(serviceBuilderExtension.getServiceInputFileName());
+                }
+
                 return new File(warConvention.getWebAppDir(), "WEB-INF/service.xml");
+            }
+        });
+
+        buildService.getConventionMapping().map("jalopyInputFile", new Callable<File>() {
+            @Override
+            public File call() throws Exception {
+                if (serviceBuilderExtension.getJalopyInputFileName() != null) {
+                    return project.file(serviceBuilderExtension.getJalopyInputFileName());
+                }
+                return null;
             }
         });
 

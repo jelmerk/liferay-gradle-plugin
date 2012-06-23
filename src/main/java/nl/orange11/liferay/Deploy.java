@@ -3,6 +3,8 @@ package nl.orange11.liferay;
 import org.apache.tools.ant.taskdefs.Copy;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.internal.ConventionTask;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
@@ -44,6 +46,7 @@ public class Deploy extends ConventionTask {
      *
      * @return the Liferay autodeploy dir
      */
+    @OutputDirectory
     public File getAutoDeployDir() {
         return autoDeployDir;
     }
@@ -63,6 +66,7 @@ public class Deploy extends ConventionTask {
      *
      * @return the plugin artifact to deploy
      */
+    @InputFile
     public File getWarFile() {
         return warFile;
     }

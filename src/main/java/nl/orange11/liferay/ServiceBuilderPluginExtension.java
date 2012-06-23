@@ -17,12 +17,21 @@ public class ServiceBuilderPluginExtension {
     private String apiSrcDirName;
     private String resourceDirName;
 
+    private String jalopyInputFileName;
     private String serviceInputFileName;
 
     // TODO jalopy configuration ?
 
     public ServiceBuilderPluginExtension(Project project) {
         this.project = project;
+    }
+
+    public String getJalopyInputFileName() {
+        return jalopyInputFileName;
+    }
+
+    public void setJalopyInputFileName(String jalopyInputFileName) {
+        this.jalopyInputFileName = jalopyInputFileName;
     }
 
     public String getServiceInputFileName() {

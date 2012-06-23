@@ -1,5 +1,6 @@
 package nl.orange11.liferay;
 
+import nl.orange11.liferay.util.Files;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Java;
 import org.apache.tools.ant.taskdefs.Mkdir;
@@ -7,40 +8,60 @@ import org.apache.tools.ant.types.Path;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.ConventionTask;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.TaskExecutionException;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * @author Jelmer Kuperus
  */
 public class BuildService extends ConventionTask {
 
-    @InputFiles
     private FileCollection classpath;
+
+    private String pluginName;
 
     private File implSrcDir;
     private File apiSrcDir;
     private File resourceDir;
     private File webappSrcDir;
 
+    private File jalopyInputFile;
     private File serviceInputFile;
 
     @TaskAction
     public void buildService() {
 
+        if (getPluginName() == null) {
+            throw new InvalidUserDataException("Please specify a pluginName.");
+        }
+
         if (getServiceInputFile() == null) {
-            throw new InvalidUserDataException("Please specify a serviceInputFile");
+            throw new InvalidUserDataException("Please specify a serviceInputFile.");
         }
 
         if (getClasspath() == null) {
-            throw new InvalidUserDataException("Please specify a the classpath");
+            throw new InvalidUserDataException("Please specify a classpath.");
         }
 
         if (!getServiceInputFile().exists()) {
             throw new InvalidUserDataException("ServiceInputFile " + getServiceInputFile() + " does not exist.");
+        }
+
+        if (getJalopyInputFile() != null && !getJalopyInputFile().exists()) {
+            throw new InvalidUserDataException("JalopyInputFile " + getJalopyInputFile() + " does not exist.");
+        }
+
+        // the Jalopy file to use is actually not a parameter you can pass to service builder it just looks at a number
+        // of predefined locations on the filesystem. So we set up a working dir where we mimic the layout
+        // servicebuilder expects as a workaround
+
+        File workingDir;
+        try {
+            workingDir = prepareWorkingDir();
+        } catch (IOException e) {
+            throw new TaskExecutionException(this, e);
         }
 
         Mkdir mkServicebuilderMainSourceSetDir = new Mkdir();
@@ -54,8 +75,10 @@ public class BuildService extends ConventionTask {
         Java javaTask = new Java();
         javaTask.setTaskName("service builder");
         javaTask.setClassname("com.liferay.portal.tools.servicebuilder.ServiceBuilder");
-        javaTask.setOutputproperty("service.test.output");
 
+        javaTask.setFork(true); // must fork or the working dir we set below is not picked up
+        javaTask.setDir(workingDir);
+        javaTask.setOutputproperty("service.test.output");
 
         Project antProject = getAnt().getAntProject();
 
@@ -152,119 +175,54 @@ public class BuildService extends ConventionTask {
                 .setLine("service.props.util=com.liferay.util.service.ServiceProps");
 
         javaTask.createArg()
-                .setLine("service.plugin.name=" + "myplugin"); // TODO: probably should be something like the module name
+                .setLine("service.plugin.name=" + getPluginName());
+
+        //javaTask.createJvmarg().setLine("-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5006");
 
         javaTask.execute();
 
-        String output = antProject.getProperty("service.test.output"); // does this work?
+        String processOutput = antProject.getProperty("service.test.output");
 
+        System.out.println(processOutput);  // is there some sort of abstraction we should be using ?
 
-        System.out.println("***********" + (output == null));
-        System.out.println("####" + output);
-        if (output != null && output.contains("Error")) {
+        if (processOutput != null && processOutput.contains("Error")) {
             throw new TaskExecutionException(this, null);
         }
 
-        /*
+        // clean up the working dir we created
 
-        <target name="build-service">
-            <mkdir dir="docroot/WEB-INF/classes" />
-            <mkdir dir="docroot/WEB-INF/lib" />
-            <mkdir dir="docroot/WEB-INF/service" />
-            <mkdir dir="docroot/WEB-INF/sql" />
-            <mkdir dir="docroot/WEB-INF/src" />
-
-            <copy todir="docroot/WEB-INF/classes">
-                <fileset dir="docroot/WEB-INF/src" excludes="** / *.java" />
-            </copy>
-
-            <path id="service.classpath">
-                <path refid="lib.classpath" />
-                <path refid="portal.classpath" />
-                <fileset dir="${app.server.lib.portal.dir}" includes="commons-digester.jar,commons-lang.jar,easyconf.jar" />
-                <fileset dir="docroot/WEB-INF/lib" includes="*.jar" />
-                <pathelement location="docroot/WEB-INF/classes" />
-            </path>
-
-            <if>
-                <not>
-                    <isset property="service.input.file" />
-                </not>
-                    <then>
-                        <property name="service.input.file" value="${basedir}/docroot/WEB-INF/service.xml" />
-                </then>
-            </if>
-
-            <java
-                classname="com.liferay.portal.tools.servicebuilder.ServiceBuilder"
-                classpathref="service.classpath"
-                outputproperty="service.test.output"
-            >
-                <arg value="-Dexternal-properties=com/liferay/portal/tools/dependencies/portal-tools.properties" />
-                <arg value="-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.Log4JLogger" />
-                <arg value="service.input.file=${service.input.file}" />
-                <arg value="service.hbm.file=${basedir}/docroot/WEB-INF/src/META-INF/portlet-hbm.xml" />
-                <arg value="service.orm.file=${basedir}/docroot/WEB-INF/src/META-INF/portlet-orm.xml" />
-                <arg value="service.model.hints.file=${basedir}/docroot/WEB-INF/src/META-INF/portlet-model-hints.xml" />
-                <arg value="service.spring.file=${basedir}/docroot/WEB-INF/src/META-INF/portlet-spring.xml" />
-                <arg value="service.spring.base.file=${basedir}/docroot/WEB-INF/src/META-INF/base-spring.xml" />
-                <arg value="service.spring.cluster.file=${basedir}/docroot/WEB-INF/src/META-INF/cluster-spring.xml" />
-                <arg value="service.spring.dynamic.data.source.file=${basedir}/docroot/WEB-INF/src/META-INF/dynamic-data-source-spring.xml" />
-                <arg value="service.spring.hibernate.file=${basedir}/docroot/WEB-INF/src/META-INF/hibernate-spring.xml" />
-                <arg value="service.spring.infrastructure.file=${basedir}/docroot/WEB-INF/src/META-INF/infrastructure-spring.xml" />
-                <arg value="service.spring.shard.data.source.file=${basedir}/docroot/WEB-INF/src/META-INF/shard-data-source-spring.xml" />
-                <arg value="service.api.dir=${basedir}/docroot/WEB-INF/service" />
-                <arg value="service.impl.dir=${basedir}/docroot/WEB-INF/src" />
-                <arg value="service.json.file=${basedir}/docroot/js/service.js" />
-                <arg value="service.sql.dir=${basedir}/docroot/WEB-INF/sql" />
-                <arg value="service.sql.file=tables.sql" />
-                <arg value="service.sql.indexes.file=indexes.sql" />
-                <arg value="service.sql.indexes.properties.file=indexes.properties" />
-                <arg value="service.sql.sequences.file=sequences.sql" />
-                <arg value="service.auto.namespace.tables=true" />
-                <arg value="service.bean.locator.util=com.liferay.util.bean.PortletBeanLocatorUtil" />
-                <arg value="service.props.util=com.liferay.util.service.ServiceProps" />
-                <arg value="service.plugin.name=${plugin.name}" />
-            </java>
-
-            <echo>${service.test.output}</echo>
-
-            <if>
-                <contains string="${service.test.output}" substring="Error" />
-                <then>
-                    <fail>Service Builder generated exceptions.</fail>
-                </then>
-            </if>
-
-            <delete file="ServiceBuilder.temp" />
-
-            <mkdir dir="docroot/WEB-INF/service-classes" />
-
-            <path id="service.classpath">
-                <fileset dir="${app.server.lib.global.dir}" includes="*.jar" />
-                <fileset dir="${project.dir}/lib" includes="activation.jar,jsp-api.jar,mail.jar,servlet-api.jar" />
-                <fileset dir="docroot/WEB-INF/lib" excludes="${plugin.name}-service.jar" includes="*.jar" />
-            </path>
-
-            <antcall target="compile-java">
-                <param name="javac.classpathref" value="service.classpath" />
-                <param name="javac.destdir" value="docroot/WEB-INF/service-classes" />
-                <param name="javac.srcdir" value="docroot/WEB-INF/service" />
-                <reference refid="service.classpath" torefid="service.classpath" />
-            </antcall>
-
-            <zip
-                basedir="docroot/WEB-INF/service-classes"
-                destfile="docroot/WEB-INF/lib/${plugin.name}-service.jar"
-            />
-
-            <delete dir="docroot/WEB-INF/service-classes" />
-        </target>
-
-         */
-
+        Files.deleteRecursively(workingDir);
     }
 
+
+    private File prepareWorkingDir() throws IOException {
+
+        File workingDir = Files.createTempDir();
+
+        File miscDir = new File(workingDir, "misc");
+        if (!miscDir.mkdir()) {
+            throw new IllegalStateException("Failed to create directory " + miscDir);
+        }
+
+        File jalopyFile = new File(miscDir, "jalopy.xml");
+
+        if (getJalopyInputFile() != null) {
+            Files.copy(getJalopyInputFile(), jalopyFile);
+        }
+
+        return workingDir;
+    }
+
+    @Input
+    public String getPluginName() {
+        return pluginName;
+    }
+
+    public void setPluginName(String pluginName) {
+        this.pluginName = pluginName;
+    }
+
+    @InputFile
     public File getServiceInputFile() {
         return serviceInputFile;
     }
@@ -273,6 +231,17 @@ public class BuildService extends ConventionTask {
         this.serviceInputFile = serviceInputFile;
     }
 
+    @Optional
+    @InputFile
+    public File getJalopyInputFile() {
+        return jalopyInputFile;
+    }
+
+    public void setJalopyInputFile(File jalopyInputFile) {
+        this.jalopyInputFile = jalopyInputFile;
+    }
+
+    @OutputDirectory
     public File getImplSrcDir() {
         return implSrcDir;
     }
@@ -281,6 +250,7 @@ public class BuildService extends ConventionTask {
         this.implSrcDir = implSrcDir;
     }
 
+    @OutputDirectory
     public File getApiSrcDir() {
         return apiSrcDir;
     }
@@ -289,6 +259,7 @@ public class BuildService extends ConventionTask {
         this.apiSrcDir = apiSrcDir;
     }
 
+    @OutputDirectory
     public File getResourceDir() {
         return resourceDir;
     }
@@ -297,6 +268,7 @@ public class BuildService extends ConventionTask {
         this.resourceDir = resourceDir;
     }
 
+    @OutputDirectory
     public File getWebappSrcDir() {
         return webappSrcDir;
     }
@@ -305,6 +277,7 @@ public class BuildService extends ConventionTask {
         this.webappSrcDir = webappSrcDir;
     }
 
+    @InputFiles
     public FileCollection getClasspath() {
         return classpath;
     }
