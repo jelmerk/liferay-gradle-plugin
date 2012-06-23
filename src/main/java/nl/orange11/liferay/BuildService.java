@@ -57,12 +57,7 @@ public class BuildService extends ConventionTask {
         // of predefined locations on the filesystem. So we set up a working dir where we mimic the layout
         // servicebuilder expects as a workaround
 
-        File workingDir;
-        try {
-            workingDir = prepareWorkingDir();
-        } catch (IOException e) {
-            throw new TaskExecutionException(this, e);
-        }
+        File workingDir = prepareWorkingDir();
 
         Mkdir mkServicebuilderMainSourceSetDir = new Mkdir();
         mkServicebuilderMainSourceSetDir.setDir(getImplSrcDir());
@@ -195,7 +190,7 @@ public class BuildService extends ConventionTask {
     }
 
 
-    private File prepareWorkingDir() throws IOException {
+    private File prepareWorkingDir() {
 
         File workingDir = Files.createTempDir();
 
@@ -207,7 +202,11 @@ public class BuildService extends ConventionTask {
         File jalopyFile = new File(miscDir, "jalopy.xml");
 
         if (getJalopyInputFile() != null) {
-            Files.copy(getJalopyInputFile(), jalopyFile);
+            try {
+                Files.copy(getJalopyInputFile(), jalopyFile);
+            } catch (IOException e) {
+                throw new TaskExecutionException(this, e);
+            }
         }
 
         return workingDir;
