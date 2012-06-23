@@ -25,7 +25,7 @@ import static java.lang.String.format;
  */
 public class ServiceBuilderPlugin implements Plugin<Project> {
 
-    public static final String BUILD_SERVICE = "buildService";
+    public static final String BUILD_SERVICE = "generateService";
 
     public static final String JAR_SERVICE = "jarService";
 
