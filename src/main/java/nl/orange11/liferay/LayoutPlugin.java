@@ -6,7 +6,8 @@ import org.gradle.api.Project;
 /**
  * @author Jelmer Kuperus
  */
-public class ExtPlugin implements Plugin<Project> {
+public class LayoutPlugin implements Plugin<Project> {
+
 
     @Override
     public void apply(Project target) {

@@ -39,7 +39,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
 
-        createConfigurations(project);
+        configureConfigurations(project);
         createServiceBuilderExtension(project);
         configureSourceSets(project);
         configureArchives(project);
@@ -49,7 +49,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         configureBuildServiceTask(project);
     }
 
-    private void createConfigurations(Project project) {
+    private void configureConfigurations(Project project) {
 
         Configuration serviceBuilderConfiguration = project.getConfigurations().add(SERVICE_BUILDER_CONFIGURATION_NAME);
         serviceBuilderConfiguration.setVisible(false);
