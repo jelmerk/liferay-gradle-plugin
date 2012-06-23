@@ -4,6 +4,7 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.internal.file.collections.SimpleFileCollection;
@@ -28,7 +29,11 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
     public static final String JAR_SERVICE = "jarService";
 
-    public static final String SERVICE_BUILDER_SOURCE_SET_NAME = "service";
+    public static final String SERVICE_BUILDER_CONFIGURATION_NAME = "serviceBuilder";
+
+    public static final String SERVICE_SOURCE_SET_NAME = "service";
+
+    public static final String SERVICE_CONFIGURATION_NAME = "service";
 
     @Override
     public void apply(Project project) {
@@ -39,7 +44,6 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         configureSourceSets(project);
         configureArchives(project);
 
-
         configureTaskRule(project);
 
         configureBuildServiceTask(project);
@@ -47,11 +51,11 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
     private void createConfigurations(Project project) {
 
-        Configuration serviceBuilderConfiguration = project.getConfigurations().add("servicebuilder");
+        Configuration serviceBuilderConfiguration = project.getConfigurations().add(SERVICE_BUILDER_CONFIGURATION_NAME);
         serviceBuilderConfiguration.setVisible(false);
         serviceBuilderConfiguration.setDescription("The servicebuilder configuration");
 
-        Configuration serviceConfiguration = project.getConfigurations().add("service");
+        Configuration serviceConfiguration = project.getConfigurations().add(SERVICE_CONFIGURATION_NAME);
         serviceConfiguration.setDescription("The service configuration");
     }
 
@@ -60,25 +64,8 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     }
 
     private void configureSourceSets(Project project) {
-
         JavaPluginConvention pluginConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-
-        SourceSetContainer sourceSets = pluginConvention.getSourceSets();
-
-        SourceSet main = pluginConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-
-        SourceSet test = pluginConvention.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME);
-
-        SourceSet serviceBuilder = sourceSets.add(SERVICE_BUILDER_SOURCE_SET_NAME);
-
-
-        // either use this or : dependencies { project(path: ':',  configuration: 'service') } need to figure out what
-        // is preferable.. should we add some dependencies implicitly
-
-//        project.getConfigurations().getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME)
-//                .getDependencies().add(new DefaultProjectDependency((ProjectInternal) project, "service",
-//                new ProjectDependenciesBuildInstruction(true)));
-
+        pluginConvention.getSourceSets().add(SERVICE_SOURCE_SET_NAME);
     }
 
     private void configureArchives(Project project) {
@@ -89,14 +76,13 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
         jar.setDescription("Assembles a jar archive containing the servicebuilder classes.");
         jar.setGroup(BasePlugin.BUILD_GROUP);
-        jar.from(pluginConvention.getSourceSets().getByName(SERVICE_BUILDER_SOURCE_SET_NAME).getOutput());
+        jar.from(pluginConvention.getSourceSets().getByName(SERVICE_SOURCE_SET_NAME).getOutput());
         jar.setArchiveName(format("%s-service.jar", project.getName()));
 
-        project.getArtifacts().add("service", project.getTasks().getByName(JAR_SERVICE));
+        project.getArtifacts().add(SERVICE_CONFIGURATION_NAME, project.getTasks().getByName(JAR_SERVICE));
     }
 
     private void configureBuildServiceTask(final Project project) {
-
         BuildService buildService = project.getTasks().add(BUILD_SERVICE, BuildService.class);
         buildService.setDescription("Builds a liferay service");
         buildService.setGroup(LiferayBasePlugin.LIFERAY_GROUP);
@@ -110,7 +96,6 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
                 configureTask(project, buildService);
             }
         });
-
     }
 
     protected void configureTask(final Project project, final BuildService buildService) {
@@ -125,8 +110,8 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         final JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
 
         SourceSetContainer sourceSets = javaConvention.getSourceSets();
-        final SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-        SourceSet servicebuilderSourceSet = sourceSets.getByName(ServiceBuilderPlugin.SERVICE_BUILDER_SOURCE_SET_NAME);
+        SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+        SourceSet servicebuilderSourceSet = sourceSets.getByName(SERVICE_SOURCE_SET_NAME);
 
         final SourceDirectorySet allMainJava = mainSourceSet.getAllJava();
         final SourceDirectorySet allServiceBuilderJava = servicebuilderSourceSet.getAllJava();
@@ -143,11 +128,9 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         buildService.getConventionMapping().map("serviceInputFile", new Callable<File>() {
             @Override
             public File call() throws Exception {
-
                 if (serviceBuilderExtension.getServiceInputFileName() != null) {
-                    return project.file(serviceBuilderExtension.getServiceInputFileName());
+                    return serviceBuilderExtension.getServiceInputFile();
                 }
-
                 return new File(warConvention.getWebAppDir(), "WEB-INF/service.xml");
             }
         });
@@ -156,7 +139,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
             @Override
             public File call() throws Exception {
                 if (serviceBuilderExtension.getJalopyInputFileName() != null) {
-                    return project.file(serviceBuilderExtension.getJalopyInputFileName());
+                    return serviceBuilderExtension.getJalopyInputFile();
                 }
                 return null;
             }
@@ -194,21 +177,24 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
             @Override
             public FileCollection call() throws Exception {
 
-                Configuration servicebuilderConfiguration = project.getConfigurations().getByName("servicebuilder");
+                Configuration servicebuilderConfiguration = project.getConfigurations()
+                        .getByName(SERVICE_BUILDER_CONFIGURATION_NAME);
 
                 if (servicebuilderConfiguration.getDependencies().isEmpty()) {
 
                     // the sdk dependencies : we will need to download those
 
-                    project.getDependencies().add("servicebuilder", "com.thoughtworks.qdox:qdox:1.12");
-                    project.getDependencies().add("servicebuilder", "jalopy:jalopy:1.5rc3");
-                    project.getDependencies().add("servicebuilder", "javax.servlet:servlet-api:2.5");
-                    project.getDependencies().add("servicebuilder", "javax.servlet.jsp:jsp-api:2.1");
-                    project.getDependencies().add("servicebuilder", "javax.activation:activation:1.1");
+                    DependencyHandler projectDependencies = project.getDependencies();
+
+                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "com.thoughtworks.qdox:qdox:1.12");
+                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "jalopy:jalopy:1.5rc3");
+                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "javax.servlet:servlet-api:2.5");
+                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "javax.servlet.jsp:jsp-api:2.1");
+                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "javax.activation:activation:1.1");
 
                     //  the portal classpath dependencies : we have those locally
 
-                    project.getDependencies().add("servicebuilder", liferayExtension.getPortalClasspath());
+                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, liferayExtension.getPortalClasspath());
 
                     // the common classpath dependencies : we can get from the portal
 
@@ -220,7 +206,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
                             new File(appServerGlobalLibDirName, "easyconf.jar")
                     );
 
-                    project.getDependencies().add("servicebuilder", appserverClasspath);
+                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, appserverClasspath);
 
                 }
 

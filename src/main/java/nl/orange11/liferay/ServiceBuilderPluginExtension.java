@@ -20,8 +20,6 @@ public class ServiceBuilderPluginExtension {
     private String jalopyInputFileName;
     private String serviceInputFileName;
 
-    // TODO jalopy configuration ?
-
     public ServiceBuilderPluginExtension(Project project) {
         this.project = project;
     }
@@ -67,7 +65,11 @@ public class ServiceBuilderPluginExtension {
     }
 
     public File getServiceInputFile() {
-        throw new UnsupportedOperationException("");
+        return project.file(getServiceInputFileName());
+    }
+
+    public File getJalopyInputFile() {
+        return project.file(getJalopyInputFileName());
     }
 
     public void servicebuilder(Closure closure) {
