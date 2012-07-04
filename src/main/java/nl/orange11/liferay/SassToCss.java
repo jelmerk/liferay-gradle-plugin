@@ -25,7 +25,7 @@ public class SassToCss extends ConventionTask {
     @TaskAction
     public void sassToCss() {
 
-        if (getSassDir() == null || !getSassDir().exists()) {
+        if (getSassDir() == null) {
             throw new InvalidUserDataException("Please specify a valid sassDir");
         }
 

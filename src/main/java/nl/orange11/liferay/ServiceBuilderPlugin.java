@@ -3,19 +3,27 @@ package nl.orange11.liferay;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
+import org.gradle.api.internal.file.DefaultSourceDirectorySet;
+import org.gradle.api.internal.file.UnionFileTree;
 import org.gradle.api.internal.file.collections.SimpleFileCollection;
-import org.gradle.api.plugins.BasePlugin;
-import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.plugins.WarPluginConvention;
+import org.gradle.api.internal.tasks.TaskDependencyInternal;
+import org.gradle.api.internal.tasks.TaskDependencyResolveContext;
+import org.gradle.api.plugins.*;
+import org.gradle.api.reporting.ReportingExtension;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.TaskDependency;
 import org.gradle.api.tasks.bundling.Jar;
+import org.gradle.api.tasks.javadoc.Javadoc;
 
 import java.io.File;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import static java.lang.String.format;
@@ -26,6 +34,8 @@ import static java.lang.String.format;
 public class ServiceBuilderPlugin implements Plugin<Project> {
 
     public static final String BUILD_SERVICE = "generateService";
+
+    public static final String SERVICE_JAVADOC = "serviceJavadoc";
 
     public static final String JAR_SERVICE = "jarService";
 
@@ -39,6 +49,8 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
 
+        // configureJavadoc(project);
+
         configureConfigurations(project);
         createServiceBuilderExtension(project);
         configureSourceSets(project);
@@ -46,8 +58,55 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
         configureTaskRule(project);
 
+        configureServiceJavadocTask(project);
         configureBuildServiceTask(project);
     }
+
+//    private void configureJavadoc(Project project) {
+//
+//        // annoyingly a circular dependency is created if you depend on an artifact of a configuration in your own
+//        // project. This is done in the configureJavaDoc method of the JavaPlugin. There addDependsOnTaskInOtherProjects
+//        // is called to ensure that we always get a circular dependency.. annoying
+//        JavaPluginConvention pluginConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+//
+//        Task javadocTask = project.getTasks().getByName(JavaPlugin.JAVADOC_TASK_NAME);
+//        project.getTasks().remove(javadocTask);
+//
+//
+//        SourceSet mainSourceSet = pluginConvention.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+//        Javadoc javadoc = project.getTasks().add(JavaPlugin.JAVADOC_TASK_NAME, Javadoc.class);
+//        javadoc.setDescription("Generates Javadoc API documentation for the main source code.");
+//        javadoc.setGroup(JavaBasePlugin.DOCUMENTATION_GROUP);
+//        javadoc.setClasspath(mainSourceSet.getOutput().plus(mainSourceSet.getCompileClasspath()));
+//        javadoc.setSource(mainSourceSet.getAllJava());
+//
+//
+//        final Configuration configuration = project.getConfigurations().getByName(configurationName);
+//
+//        javadoc.dependsOn(configuration.getTaskDependencyFromProjectDependency(useDependedOn, otherProjectTaskName));
+//
+//        addDependsOnTaskInOtherProjects(javadoc, true, JavaPlugin.JAVADOC_TASK_NAME,
+//                JavaPlugin.COMPILE_CONFIGURATION_NAME);
+//
+//
+//        // is a TaskDependency
+//
+////        Configuration compileConfiguration = project.getConfigurations()
+////                .getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME);
+////
+////        Set<Object> dependsOn = javadocTask.getDependsOn();
+////
+////        for (Iterator<Object> iterator = dependsOn.iterator(); iterator.hasNext(); ) {
+////            Object dependency = iterator.next();
+////
+////            if (compileConfiguration == dependency) {
+////                iterator.remove();
+////            }
+////        }
+////
+////        System.out.println("DO WE EVEN GET HERE ?" +  dependsOn);
+//
+//    }
 
     private void configureConfigurations(Project project) {
 
@@ -82,11 +141,53 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         project.getArtifacts().add(SERVICE_CONFIGURATION_NAME, project.getTasks().getByName(JAR_SERVICE));
     }
 
-    private void configureBuildServiceTask(final Project project) {
+    private void configureBuildServiceTask(Project project) {
         BuildService buildService = project.getTasks().add(BUILD_SERVICE, BuildService.class);
         buildService.setDescription("Builds a liferay service");
         buildService.setGroup(LiferayBasePlugin.LIFERAY_GROUP);
 
+    }
+
+    private void configureServiceJavadocTask(Project project) {
+
+        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+
+//        ReportingExtension reportingExtension = project.getExtensions().findByType(ReportingExtension.class);
+
+
+
+        Javadoc javadoc =  (Javadoc) project.getTasks().getByName(JavaPlugin.JAVADOC_TASK_NAME);
+
+        /*
+			<doclet name="com.liferay.tools.doclets.standard.Standard" path="${project.dir}/lib/development/liferay-doclet.jar">
+				<param name="-linksource" />
+			</doclet>
+
+         */
+
+        SourceSetContainer sourceSets = javaConvention.getSourceSets();
+
+        SourceSet servicebuilderSourceSet = sourceSets.getByName(SERVICE_SOURCE_SET_NAME);
+
+
+        UnionFileTree allSources = new UnionFileTree();
+        allSources.add(javadoc.getSource());
+        allSources.add(servicebuilderSourceSet.getAllJava());
+
+        javadoc.setSource(allSources);
+
+//
+//        SourceSet servicebuilderSourceSet = sourceSets.getByName(SERVICE_SOURCE_SET_NAME);
+//
+//        Javadoc javadoc = project.getTasks().add(SERVICE_JAVADOC, Javadoc.class);
+//        javadoc.setDescription("Generates Javadoc API documentation for the service source code.");
+//        javadoc.setGroup(JavaBasePlugin.DOCUMENTATION_GROUP);
+//        javadoc.setClasspath(servicebuilderSourceSet.getOutput().plus(servicebuilderSourceSet.getCompileClasspath()));
+//        javadoc.setSource(servicebuilderSourceSet.getAllJava());
+//        javadoc.setDestinationDir(reportingExtension.file("service-api-docs"));
+
+
+        //reporting.file("rest-api-docs")
     }
 
     private void configureTaskRule(final Project project) {
