@@ -18,9 +18,11 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.javadoc.Javadoc;
+import org.gradle.external.javadoc.StandardJavadocDocletOptions;
 import org.gradle.plugins.ide.idea.GenerateIdeaModule;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -46,8 +48,6 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
 
-        // configureJavadoc(project);
-
         configureConfigurations(project);
         createServiceBuilderExtension(project);
         configureSourceSets(project);
@@ -55,7 +55,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
         configureTaskRule(project);
 
-        configureServiceJavadocTask(project);
+        configureJavadocTask(project);
         configureIdeaTask(project);
         configureBuildServiceTask(project);
     }
@@ -100,23 +100,17 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
     }
 
-    private void configureServiceJavadocTask(Project project) {
+    private void configureJavadocTask(Project project) {
         JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
 
         Javadoc javadoc =  (Javadoc) project.getTasks().getByName(JavaPlugin.JAVADOC_TASK_NAME);
-
-
-        // TODO: we should use liferay-doclet.jar but it's not in any repo
-        /*
-			<doclet name="com.liferay.tools.doclets.standard.Standard" path="${project.dir}/lib/development/liferay-doclet.jar">
-				<param name="-linksource" />
-			</doclet>
-         */
+        StandardJavadocDocletOptions options = new StandardJavadocDocletOptions();
+        options.setTags(Arrays.asList("generated:a:\"ServiceBuilder generated this class. " +
+                "Modifications in this class will be overwritten the next time it is generated\""));
+        javadoc.setOptions(options);
 
         SourceSetContainer sourceSets = javaConvention.getSourceSets();
-
         SourceSet servicebuilderSourceSet = sourceSets.getByName(SERVICE_SOURCE_SET_NAME);
-
 
         UnionFileTree allSources = new UnionFileTree();
         allSources.add(javadoc.getSource());
