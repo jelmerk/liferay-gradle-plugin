@@ -7,6 +7,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
+import org.gradle.api.internal.IConventionAware;
 import org.gradle.api.internal.file.UnionFileTree;
 import org.gradle.api.internal.file.collections.SimpleFileCollection;
 import org.gradle.api.plugins.BasePlugin;
@@ -17,9 +18,11 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.javadoc.Javadoc;
-import org.gradle.plugins.ide.idea.model.IdeaModel;
+import org.gradle.plugins.ide.idea.GenerateIdeaModule;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import static java.lang.String.format;
@@ -124,17 +127,31 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
     private void configureIdeaTask(Project project) {
 
-        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-        IdeaModel extension = project.getExtensions().getByType(IdeaModel.class);
+        final JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
 
-        if (extension == null) {
+        final SourceSetContainer sourceSets = javaConvention.getSourceSets();
+
+        final SourceSet servicebuilderSourceSet = sourceSets.getByName(SERVICE_SOURCE_SET_NAME);
+        final SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+
+        GenerateIdeaModule task = (GenerateIdeaModule) project.getTasks().getByName("ideaModule");
+
+        if (task == null) {
             return;
         }
 
-        SourceSetContainer sourceSets = javaConvention.getSourceSets();
+        IConventionAware module = (IConventionAware) task.getModule();  // using an internal api.. is there any other way ?
 
-        SourceSet servicebuilderSourceSet = sourceSets.getByName(SERVICE_SOURCE_SET_NAME);
-        extension.getModule().getSourceDirs().addAll(servicebuilderSourceSet.getAllJava().getSrcDirs());
+        module.getConventionMapping().map("sourceDirs", new Callable<Set<File>>() {
+            @Override
+            public Set<File> call() throws Exception {
+                Set<File> result = new HashSet<File>();
+
+                result.addAll(servicebuilderSourceSet.getAllJava().getSrcDirs());
+                result.addAll(mainSourceSet.getAllJava().getSrcDirs());
+                return result;
+            }
+        });
     }
 
     private void configureTaskRule(final Project project) {
