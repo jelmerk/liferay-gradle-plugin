@@ -65,11 +65,38 @@ public class ServiceBuilderPluginExtension {
     }
 
     public File getServiceInputFile() {
+        if (getServiceInputFile() == null) {
+            return null;
+        }
         return project.file(getServiceInputFileName());
     }
 
     public File getJalopyInputFile() {
+        if (getJalopyInputFileName() == null) {
+            return null;
+        }
         return project.file(getJalopyInputFileName());
+    }
+
+    public File getImplSrcDir() {
+        if (getImplSrcDir() == null) {
+            return null;
+        }
+        return project.file(getImplSrcDir());
+    }
+
+    public File getApiSrcDir() {
+        if (getApiSrcDirName() == null) {
+            return null;
+        }
+        return project.file(getApiSrcDirName());
+    }
+
+    public File getResourceDir() {
+        if (getResourceDirName() == null) {
+            return null;
+        }
+        return project.file(getResourceDirName());
     }
 
     public void servicebuilder(Closure closure) {

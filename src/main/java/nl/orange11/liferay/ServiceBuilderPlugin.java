@@ -187,7 +187,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         buildService.getConventionMapping().map("serviceInputFile", new Callable<File>() {
             @Override
             public File call() throws Exception {
-                if (serviceBuilderExtension.getServiceInputFileName() != null) {
+                if (serviceBuilderExtension.getServiceInputFile() != null) {
                     return serviceBuilderExtension.getServiceInputFile();
                 }
                 return new File(warConvention.getWebAppDir(), "WEB-INF/service.xml");
@@ -197,7 +197,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         buildService.getConventionMapping().map("jalopyInputFile", new Callable<File>() {
             @Override
             public File call() throws Exception {
-                if (serviceBuilderExtension.getJalopyInputFileName() != null) {
+                if (serviceBuilderExtension.getJalopyInputFile() != null) {
                     return serviceBuilderExtension.getJalopyInputFile();
                 }
                 return null;
@@ -207,6 +207,9 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         buildService.getConventionMapping().map("implSrcDir", new Callable<File>() {
             @Override
             public File call() throws Exception {
+                if (serviceBuilderExtension.getImplSrcDir() != null) {
+                    return serviceBuilderExtension.getImplSrcDir();
+                }
                 return allMainJava.getSrcDirs().iterator().next();
             }
         });
@@ -214,6 +217,9 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         buildService.getConventionMapping().map("apiSrcDir", new Callable<File>() {
             @Override
             public File call() throws Exception {
+                if (serviceBuilderExtension.getApiSrcDir() != null) {
+                    return serviceBuilderExtension.getApiSrcDir();
+                }
                 return allServiceBuilderJava.getSrcDirs().iterator().next();
             }
         });
@@ -221,6 +227,9 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         buildService.getConventionMapping().map("resourceDir", new Callable<File>() {
             @Override
             public File call() throws Exception {
+                if (serviceBuilderExtension.getResourceDir() != null) {
+                    return serviceBuilderExtension.getResourceDir();
+                }
                 return allResources.getSrcDirs().iterator().next();
             }
         });
