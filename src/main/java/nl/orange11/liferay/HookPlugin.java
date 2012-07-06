@@ -9,7 +9,7 @@ import org.gradle.api.Project;
 public class HookPlugin implements Plugin<Project> {
 
     @Override
-    public void apply(Project target) {
-
+    public void apply(Project project) {
+        project.getPlugins().apply(LiferayBasePlugin.class);
     }
 }

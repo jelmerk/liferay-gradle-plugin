@@ -10,7 +10,11 @@ public class LayoutPlugin implements Plugin<Project> {
 
 
     @Override
-    public void apply(Project target) {
+    public void apply(Project project) {
+        project.getPlugins().apply(LiferayBasePlugin.class);
 
+        // the layout ant file also invokes the merge target but only when original.war.file is set
+        // basically it will unzip the contents of the war file to a tmp folder and copies the templates on top
+        // should we support this ?
     }
 }
