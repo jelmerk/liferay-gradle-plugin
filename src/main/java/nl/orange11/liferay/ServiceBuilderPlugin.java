@@ -152,12 +152,12 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         project.getTasks().withType(BuildService.class, new Action<BuildService>() {
             @Override
             public void execute(BuildService buildService) {
-                configureTask(project, buildService);
+                configureBuildServiceTaskDefaults(project, buildService);
             }
         });
     }
 
-    protected void configureTask(final Project project, final BuildService buildService) {
+    protected void configureBuildServiceTaskDefaults(final Project project, final BuildService buildService) {
 
         final LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
 

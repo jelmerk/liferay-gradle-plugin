@@ -19,48 +19,41 @@ public class PortletPlugin implements Plugin<Project> {
 
     public static final String SASS_TO_CSS ="sassToCss";
 
+    private static final String SASS_CONFIGURATION_NAME = "sass";
+
     @Override
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
 
         createConfiguration(project);
 
-        configureTaskRule(project);
+        configureSassToCssTaskRule(project);
         configureSassToCssTask(project);
     }
 
     private void createConfiguration(Project project) {
 
-        Configuration configuration = project.getConfigurations().add("sass");
+        Configuration configuration = project.getConfigurations().add(SASS_CONFIGURATION_NAME);
 
         configuration.setVisible(false);
-        configuration.setTransitive(true);
         configuration.setDescription("The sass configuration");
     }
 
-    private void configureTaskRule(final Project project) {
+    private void configureSassToCssTaskRule(final Project project) {
         project.getTasks().withType(SassToCss.class, new Action<SassToCss>() {
             @Override
-            public void execute(SassToCss sassToCss) {
-                configureTask(project, sassToCss);
+            public void execute(SassToCss task) {
+                configureSassToCssTaskDefaults(project, task);
             }
         });
     }
 
-    protected void configureTask(final Project project, SassToCss task) {
+    protected void configureSassToCssTaskDefaults(final Project project, SassToCss task) {
 
         final LiferayPluginExtension liferayPluginExtension = project.getExtensions()
                 .findByType(LiferayPluginExtension.class);
 
-        final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
-
         final LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
-
-        task.getConventionMapping().map("sassDir", new Callable<File>() {
-            public File call() throws Exception {
-                return warConvention.getWebAppDir();
-            }
-        });
 
         task.getConventionMapping().map("classpath", new Callable<FileCollection>() {
             @Override
@@ -70,11 +63,11 @@ public class PortletPlugin implements Plugin<Project> {
 
                 if (sassConfiguration.getDependencies().isEmpty()) {
 
-                    project.getDependencies().add("sass", "javax.servlet:servlet-api:2.5");
-                    project.getDependencies().add("sass", "javax.servlet.jsp:jsp-api:2.1");
-                    project.getDependencies().add("sass", "javax.activation:activation:1.1");
+                    project.getDependencies().add(SASS_CONFIGURATION_NAME, "javax.servlet:servlet-api:2.5");
+                    project.getDependencies().add(SASS_CONFIGURATION_NAME, "javax.servlet.jsp:jsp-api:2.1");
+                    project.getDependencies().add(SASS_CONFIGURATION_NAME, "javax.activation:activation:1.1");
 
-                    project.getDependencies().add("sass", liferayExtension.getPortalClasspath());
+                    project.getDependencies().add(SASS_CONFIGURATION_NAME, liferayExtension.getPortalClasspath());
                 }
                 return sassConfiguration;
             }
@@ -86,11 +79,14 @@ public class PortletPlugin implements Plugin<Project> {
                 return liferayPluginExtension.getAppServerPortalDir();
             }
         });
-
     }
 
     private void configureSassToCssTask(final Project project) {
-        final SassToCss task = project.getTasks().add(SASS_TO_CSS, SassToCss.class);
+
+        WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
+
+        SassToCss task = project.getTasks().add(SASS_TO_CSS, SassToCss.class);
+        task.setSassDir(warConvention.getWebAppDir());
 
         // should this go here or in the configure?
         Task warTask = project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);

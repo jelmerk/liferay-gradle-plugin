@@ -1,5 +1,6 @@
 package nl.orange11.liferay;
 
+import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.WarPlugin;
@@ -21,32 +22,41 @@ public class LiferayBasePlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(WarPlugin.class);
         createLiferayExtension(project);
-        configureDeploy(project);
+
+        configureDeployTaskRule(project);
+        configureDeployTask(project);
     }
 
-    private void createLiferayExtension(Project project) {
+    protected void createLiferayExtension(Project project) {
         project.getExtensions().create("liferay", LiferayPluginExtension.class, project);
     }
 
-    private void configureDeploy(Project project) {
+    private void configureDeployTaskRule(final Project project) {
+        project.getTasks().withType(Deploy.class, new Action<Deploy>() {
+            @Override
+            public void execute(Deploy task) {
+                configureDeployTaskDefaults(project, task);
+            }
+        });
+    }
+
+    protected void configureDeployTaskDefaults(Project project, Deploy task) {
+        final LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
+
+        task.getConventionMapping().map("autoDeployDir", new Callable<File>() {
+            public File call() throws Exception {
+                return liferayExtension.getAutoDeployDir();
+            }
+        });
+    }
+
+    private void configureDeployTask(Project project) {
         final War warTask = (War) project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
 
         final Deploy deploy = project.getTasks().add(DEPLOY, Deploy.class);
         deploy.setDescription("Deploys the plugin");
         deploy.setGroup(LiferayBasePlugin.LIFERAY_GROUP);
-
-        final LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
-
-        deploy.getConventionMapping().map("autoDeployDir", new Callable<File>() {
-            public File call() throws Exception {
-                return liferayExtension.getAutoDeployDir();
-            }
-        });
-        deploy.getConventionMapping().map("warFile", new Callable<File>() {
-            public File call() throws Exception {
-                return warTask.getArchivePath();
-            }
-        });
+        deploy.setWarFile(warTask.getArchivePath());
 
         deploy.dependsOn(warTask);
     }

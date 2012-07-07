@@ -6,6 +6,7 @@ import org.apache.tools.ant.types.Path;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.ConventionTask;
+import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
@@ -66,7 +67,7 @@ public class SassToCss extends ConventionTask {
         javaTask.execute();
     }
 
-
+    @InputDirectory
     public File getSassDir() {
         return sassDir;
     }
@@ -84,6 +85,7 @@ public class SassToCss extends ConventionTask {
         this.classpath = classpath;
     }
 
+    @InputDirectory
     public File getAppServerPortalDir() {
         return appServerPortalDir;
     }
