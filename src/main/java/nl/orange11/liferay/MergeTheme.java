@@ -1,5 +1,6 @@
 package nl.orange11.liferay;
 
+import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Copy;
 import org.apache.tools.ant.types.FileSet;
 import org.gradle.api.InvalidUserDataException;
@@ -21,7 +22,7 @@ public class MergeTheme extends ConventionTask {
 
     private File appServerPortalDir;
 
-    private File deltaDir;
+    private File webappDir;
     private File outputDir;
 
     @TaskAction
@@ -52,14 +53,27 @@ public class MergeTheme extends ConventionTask {
         } else  {
             // TODO : basically we're depending on a theme we created ourself, need to sort out how to do this, since we need to build the theme in that case
         }
+
+        copyWebappDir();
     }
 
-    protected void copyDelta() {
-        Copy copy = new Copy();
+    protected void copyWebappDir() {
+        Project antProject = getAnt().getProject();
 
+        FileSet mainFileSet = new FileSet();
+        mainFileSet.setDir(getWebappDir());
+
+        Copy mainCopy = new Copy();
+        mainCopy.setTodir(getOutputDir());
+        mainCopy.setOverwrite(true);
+        mainCopy.add(mainFileSet);
+        mainCopy.setProject(antProject);
+        mainCopy.execute();
     }
 
     protected void copyUnstyledTheme() {
+
+        Project antProject = getAnt().getProject();
 
         FileSet mainFileSet = new FileSet();
         mainFileSet.setDir(new File(getAppServerPortalDir(), "html/themes/_unstyled"));
@@ -69,6 +83,7 @@ public class MergeTheme extends ConventionTask {
         mainCopy.setTodir(getOutputDir());
         mainCopy.setOverwrite(true);
         mainCopy.add(mainFileSet);
+        mainCopy.setProject(antProject);
         mainCopy.execute();
 
         FileSet templatesFileSet = new FileSet();
@@ -80,6 +95,7 @@ public class MergeTheme extends ConventionTask {
         templatesCopy.setTodir(new File(getOutputDir(), "templates"));
         templatesCopy.setOverwrite(true);
         templatesCopy.add(templatesFileSet);
+        templatesCopy.setProject(antProject);
         templatesCopy.execute();
 
         /*
@@ -102,7 +118,11 @@ public class MergeTheme extends ConventionTask {
 
     protected void copyStyledTheme() {
 
+
         copyUnstyledTheme();
+
+
+        Project antProject = getAnt().getProject();
 
         FileSet fileset = new FileSet();
         fileset.setDir(new File(getAppServerPortalDir(), "html/themes/_styled"));
@@ -111,8 +131,8 @@ public class MergeTheme extends ConventionTask {
         copy.setTodir(getOutputDir());
         copy.setOverwrite(true);
         copy.add(fileset);
+        copy.setProject(antProject);
         copy.execute();
-
 
         /*
             <copy todir="docroot" overwrite="true">
@@ -140,6 +160,7 @@ public class MergeTheme extends ConventionTask {
 
     protected void copyClassicTheme() {
 
+        Project antProject = getAnt().getProject();
 
         FileSet mainFileSet = new FileSet();
         mainFileSet.setDir(new File(getAppServerPortalDir(), "html/themes/classic"));
@@ -149,6 +170,7 @@ public class MergeTheme extends ConventionTask {
         mainCopy.setTodir(getOutputDir());
         mainCopy.setOverwrite(true);
         mainCopy.add(mainFileSet);
+        mainCopy.setProject(antProject);
         mainCopy.execute();
 
         FileSet templatesFileSet = new FileSet();
@@ -159,6 +181,7 @@ public class MergeTheme extends ConventionTask {
         templatesCopy.setTodir(new File(getOutputDir(), "templates"));
         templatesCopy.setOverwrite(true);
         templatesCopy.add(templatesFileSet);
+        templatesCopy.setProject(antProject);
         templatesCopy.execute();
 
 
@@ -208,12 +231,12 @@ public class MergeTheme extends ConventionTask {
     }
 
     @InputDirectory
-    public File getDeltaDir() {
-        return deltaDir;
+    public File getWebappDir() {
+        return webappDir;
     }
 
-    public void setDeltaDir(File deltaDir) {
-        this.deltaDir = deltaDir;
+    public void setWebappDir(File webappDir) {
+        this.webappDir = webappDir;
     }
 
     @OutputDirectory
