@@ -65,7 +65,7 @@ public class ServiceBuilderPluginExtension {
     }
 
     public File getServiceInputFile() {
-        if (getServiceInputFile() == null) {
+        if (getServiceInputFileName() == null) {
             return null;
         }
         return project.file(getServiceInputFileName());
@@ -79,7 +79,7 @@ public class ServiceBuilderPluginExtension {
     }
 
     public File getImplSrcDir() {
-        if (getImplSrcDir() == null) {
+        if (getImplSrcDirName() == null) {
             return null;
         }
         return project.file(getImplSrcDir());

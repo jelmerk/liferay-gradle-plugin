@@ -7,24 +7,18 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
-import org.gradle.api.internal.IConventionAware;
-import org.gradle.api.internal.file.UnionFileTree;
-import org.gradle.api.internal.file.collections.SimpleFileCollection;
 import org.gradle.api.plugins.BasePlugin;
-import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.WarPluginConvention;
+import org.gradle.api.reporting.ReportingExtension;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.external.javadoc.StandardJavadocDocletOptions;
-import org.gradle.plugins.ide.idea.GenerateIdeaModule;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import static java.lang.String.format;
@@ -35,6 +29,8 @@ import static java.lang.String.format;
 public class ServiceBuilderPlugin implements Plugin<Project> {
 
     public static final String BUILD_SERVICE = "generateService";
+
+    public static final String JAVADOC_SERVICE = "javadocService";
 
     public static final String JAR_SERVICE = "jarService";
 
@@ -55,8 +51,9 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
         configureTaskRule(project);
 
-        configureJavadocTask(project);
-        configureIdeaTask(project);
+        configureJavadocRule(project);
+
+        configureServiceJavaDoc(project);
         configureBuildServiceTask(project);
     }
 
@@ -97,56 +94,45 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         BuildService buildService = project.getTasks().add(BUILD_SERVICE, BuildService.class);
         buildService.setDescription("Builds a liferay service");
         buildService.setGroup(LiferayBasePlugin.LIFERAY_GROUP);
-
     }
 
-    private void configureJavadocTask(Project project) {
-        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-
-        Javadoc javadoc =  (Javadoc) project.getTasks().getByName(JavaPlugin.JAVADOC_TASK_NAME);
-        StandardJavadocDocletOptions options = new StandardJavadocDocletOptions();
-        options.setTags(Arrays.asList("generated:a:\"ServiceBuilder generated this class. " +
-                "Modifications in this class will be overwritten the next time it is generated\""));
-        javadoc.setOptions(options);
-
-        SourceSetContainer sourceSets = javaConvention.getSourceSets();
-        SourceSet servicebuilderSourceSet = sourceSets.getByName(SERVICE_SOURCE_SET_NAME);
-
-        UnionFileTree allSources = new UnionFileTree();
-        allSources.add(javadoc.getSource());
-        allSources.add(servicebuilderSourceSet.getAllJava());
-
-        javadoc.setSource(allSources);
-    }
-
-    private void configureIdeaTask(Project project) {
-
-        final JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-
-        final SourceSetContainer sourceSets = javaConvention.getSourceSets();
-
-        final SourceSet servicebuilderSourceSet = sourceSets.getByName(SERVICE_SOURCE_SET_NAME);
-        final SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-
-        GenerateIdeaModule task = (GenerateIdeaModule) project.getTasks().getByName("ideaModule");
-
-        if (task == null) {
-            return;
-        }
-
-        IConventionAware module = (IConventionAware) task.getModule();  // using an internal api.. is there any other way ?
-
-        module.getConventionMapping().map("sourceDirs", new Callable<Set<File>>() {
+    private void configureJavadocRule(Project project) {
+        project.getTasks().withType(Javadoc.class, new Action<Javadoc>() {
             @Override
-            public Set<File> call() throws Exception {
-                Set<File> result = new HashSet<File>();
+            public void execute(Javadoc task) {
+                if (!(task.getOptions() instanceof StandardJavadocDocletOptions)) {
+                    return;
+                }
 
-                result.addAll(servicebuilderSourceSet.getAllJava().getSrcDirs());
-                result.addAll(mainSourceSet.getAllJava().getSrcDirs());
-                return result;
+                StandardJavadocDocletOptions castOptions = (StandardJavadocDocletOptions) task.getOptions();
+                castOptions.getTags().add("generated:a:\"ServiceBuilder generated this class. " +
+                    "Modifications in this class will be overwritten the next time it is generated");
             }
         });
     }
+
+
+    private void configureServiceJavaDoc(Project project) {
+
+        ReportingExtension reporting = project.getExtensions().getByType(ReportingExtension.class);
+
+        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+
+        SourceSet serviceSourceSet = javaConvention.getSourceSets().getByName(SERVICE_SOURCE_SET_NAME);
+        Javadoc javadoc = project.getTasks().add(JAVADOC_SERVICE, Javadoc.class);
+        javadoc.setDescription("Generates Javadoc API documentation for the servicebuilder service api.");
+        javadoc.setGroup(JavaBasePlugin.DOCUMENTATION_GROUP);
+        javadoc.setClasspath(serviceSourceSet.getOutput().plus(serviceSourceSet.getCompileClasspath()));
+
+        StandardJavadocDocletOptions options = new StandardJavadocDocletOptions();
+        options.getTags().add("generated:a:\"ServiceBuilder generated this class. " +
+            "Modifications in this class will be overwritten the next time it is generated");
+        javadoc.setOptions(options);
+
+        javadoc.setDestinationDir(reporting.file("serviceJavadoc"));
+        javadoc.setSource(serviceSourceSet.getAllJava());
+    }
+
 
     private void configureTaskRule(final Project project) {
         project.getTasks().withType(BuildService.class, new Action<BuildService>() {
@@ -268,7 +254,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
                     File appServerGlobalLibDirName = liferayExtension.getAppServerGlobalLibDir();
 
-                    SimpleFileCollection appserverClasspath = new SimpleFileCollection(
+                    FileCollection appserverClasspath = project.files(
                             new File(appServerGlobalLibDirName, "commons-digester.jar"),
                             new File(appServerGlobalLibDirName, "commons-lang.jar"),
                             new File(appServerGlobalLibDirName, "easyconf.jar")
