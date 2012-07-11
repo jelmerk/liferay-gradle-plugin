@@ -1,6 +1,6 @@
-package nl.orange11.liferay;
+package com.github.jelmerk;
 
-import nl.orange11.liferay.util.Files;
+import com.github.jelmerk.util.Files;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Java;
 import org.apache.tools.ant.taskdefs.Mkdir;

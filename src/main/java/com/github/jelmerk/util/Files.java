@@ -1,4 +1,4 @@
-package nl.orange11.liferay.util;
+package com.github.jelmerk.util;
 
 import java.io.*;
 

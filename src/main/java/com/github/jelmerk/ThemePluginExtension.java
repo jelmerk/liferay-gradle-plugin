@@ -1,4 +1,4 @@
-package nl.orange11.liferay;
+package com.github.jelmerk;
 
 /**
  * @author Jelmer Kuperus

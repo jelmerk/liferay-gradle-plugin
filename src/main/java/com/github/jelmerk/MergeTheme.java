@@ -1,4 +1,4 @@
-package nl.orange11.liferay;
+package com.github.jelmerk;
 
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Copy;

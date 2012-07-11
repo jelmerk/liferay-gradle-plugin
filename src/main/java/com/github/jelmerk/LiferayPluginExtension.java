@@ -1,4 +1,4 @@
-package nl.orange11.liferay;
+package com.github.jelmerk;
 
 import groovy.lang.Closure;
 import org.gradle.api.Project;

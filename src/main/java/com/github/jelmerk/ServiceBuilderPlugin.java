@@ -1,4 +1,4 @@
-package nl.orange11.liferay;
+package com.github.jelmerk;
 
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
