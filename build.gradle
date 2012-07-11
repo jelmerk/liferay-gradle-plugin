@@ -1,6 +1,7 @@
 apply plugin: 'java'
-apply plugin: 'maven'
 apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'signing'
 
 group = 'nl.orange11.liferay'
 archivesBaseName = 'liferay-plugin'
@@ -14,4 +15,52 @@ repositories {
 
 dependencies {
     compile gradleApi()
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { deployment -> signPom(deployment) }
+
+            repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+        }
+    }
+}
+
+configure(install.repositories.mavenInstaller) {
+    pom.project {
+        scm {
+            connection 'scm:git:http://github.com/jelmerk/liferay-gradle-plugin.git'
+            developerConnection 'scm:git:https://github.com/jelmerk/liferay-gradle-plugin.git'
+            url 'https://github.com/jelmerk/liferay-gradle-plugin'
+        }
+        licenses {
+            license {
+                name 'The Apache Software License, Version 2.0'
+                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                distribution 'repo'
+            }
+        }
+        developers {
+            developer {
+                id 'jelmerk'
+                name 'Jelmer Kuperus'
+                timezone 'Europe/Amsterdam'
+            }
+        }
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.0'
 }
