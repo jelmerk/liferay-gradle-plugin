@@ -9,6 +9,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.WarPluginConvention;
 import org.gradle.api.reporting.ReportingExtension;
@@ -113,24 +114,24 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
 
     private void configureServiceJavaDoc(Project project) {
-
-        ReportingExtension reporting = project.getExtensions().getByType(ReportingExtension.class);
-
         JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
 
         SourceSet serviceSourceSet = javaConvention.getSourceSets().getByName(SERVICE_SOURCE_SET_NAME);
-        Javadoc javadoc = project.getTasks().add(JAVADOC_SERVICE, Javadoc.class);
-        javadoc.setDescription("Generates Javadoc API documentation for the servicebuilder service api.");
-        javadoc.setGroup(JavaBasePlugin.DOCUMENTATION_GROUP);
-        javadoc.setClasspath(serviceSourceSet.getOutput().plus(serviceSourceSet.getCompileClasspath()));
+        Javadoc serviceJavadoc = project.getTasks().add(JAVADOC_SERVICE, Javadoc.class);
+        serviceJavadoc.setDescription("Generates Javadoc API documentation for the servicebuilder service api.");
+        serviceJavadoc.setGroup(JavaBasePlugin.DOCUMENTATION_GROUP);
+        serviceJavadoc.setClasspath(serviceSourceSet.getOutput().plus(serviceSourceSet.getCompileClasspath()));
 
         StandardJavadocDocletOptions options = new StandardJavadocDocletOptions();
         options.getTags().add("generated:a:\"ServiceBuilder generated this class. " +
             "Modifications in this class will be overwritten the next time it is generated");
-        javadoc.setOptions(options);
+        serviceJavadoc.setOptions(options);
 
-        javadoc.setDestinationDir(reporting.file("serviceJavadoc"));
-        javadoc.setSource(serviceSourceSet.getAllJava());
+        serviceJavadoc.setDestinationDir(new File(javaConvention.getDocsDir(), "serviceJavadoc"));
+        serviceJavadoc.setSource(serviceSourceSet.getAllJava());
+
+        Javadoc mainJavadoc =  (Javadoc) project.getTasks().getByName(JavaPlugin.JAVADOC_TASK_NAME);
+        mainJavadoc.dependsOn(serviceJavadoc);
     }
 
 
