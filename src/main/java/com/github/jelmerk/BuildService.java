@@ -183,16 +183,12 @@ public class BuildService extends ConventionTask {
         if (processOutput != null && processOutput.contains("Error")) {
             throw new TaskExecutionException(this, null);
         }
-
-        // clean up the working dir we created
-
-        Files.deleteRecursively(workingDir);
     }
 
 
     private File prepareWorkingDir() {
 
-        File workingDir = Files.createTempDir();
+        File workingDir = getProject().mkdir(new File(getProject().getBuildDir(), "servicebuilder"));
 
         File miscDir = new File(workingDir, "misc");
         if (!miscDir.mkdir()) {
