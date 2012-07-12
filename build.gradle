@@ -6,7 +6,6 @@ apply plugin: 'signing'
 group = 'com.github.jelmerk'
 archivesBaseName = 'liferay-plugin'
 version = '0.0.1-SNAPSHOT'
-description = 'Liferay plugin for Gradle'
 
 repositories {
     mavenLocal()
@@ -41,6 +40,12 @@ uploadArchives {
 
 configure(install.repositories.mavenInstaller) {
     pom.project {
+
+        packaging = 'jar'
+
+        description 'Liferay plugin for Gradle'
+        url  'https://github.com/jelmerk/liferay-gradle-plugin'
+
         scm {
             connection 'scm:git:http://github.com/jelmerk/liferay-gradle-plugin.git'
             developerConnection 'scm:git:https://github.com/jelmerk/liferay-gradle-plugin.git'
