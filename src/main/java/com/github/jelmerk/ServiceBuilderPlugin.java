@@ -85,7 +85,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         jar.setDescription("Assembles a jar archive containing the servicebuilder classes.");
         jar.setGroup(BasePlugin.BUILD_GROUP);
         jar.from(pluginConvention.getSourceSets().getByName(SERVICE_SOURCE_SET_NAME).getOutput());
-        jar.setClassifier("service");
+        jar.setAppendix("service");
 
         project.getArtifacts().add(SERVICE_CONFIGURATION_NAME, project.getTasks().getByName(JAR_SERVICE));
     }
