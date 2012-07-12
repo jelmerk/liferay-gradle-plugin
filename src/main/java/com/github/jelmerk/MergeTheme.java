@@ -22,26 +22,26 @@ public class MergeTheme extends ConventionTask {
 
     private File appServerPortalDir;
 
-    private File webappDir;
+    private File diffsDir;
     private File outputDir;
 
     @TaskAction
     public void mergeTheme() {
 
         if (getOutputDir() == null) {
-            throw new InvalidUserDataException("Please specify a valid outputDir");
+            throw new InvalidUserDataException("Please specify a valid outputDir.");
         }
 
         if (getAppServerPortalDir() == null) {
-            throw new InvalidUserDataException("Please specify a valid appServerPortalDir");
+            throw new InvalidUserDataException("Please specify a valid appServerPortalDir.");
         }
 
         if (getParentThemeName() == null) {
-            throw new InvalidUserDataException("Please specify a valid parentThemeName");
+            throw new InvalidUserDataException("Please specify a valid parentThemeName.");
         }
 
         if (getThemeType() == null) {
-            throw new InvalidUserDataException("Please specify a valid theeType");
+            throw new InvalidUserDataException("Please specify a valid themeType.");
         }
 
         if ("_unstyled".equals(getParentThemeName())) {
@@ -54,14 +54,14 @@ public class MergeTheme extends ConventionTask {
             // TODO : basically we're depending on a theme we created ourself, need to sort out how to do this, since we need to build the theme in that case
         }
 
-        copyWebappDir();
+        copyDiffs();
     }
 
-    protected void copyWebappDir() {
+    protected void copyDiffs() {
         Project antProject = getAnt().getProject();
 
         FileSet mainFileSet = new FileSet();
-        mainFileSet.setDir(getWebappDir());
+        mainFileSet.setDir(getDiffsDir());
 
         Copy mainCopy = new Copy();
         mainCopy.setTodir(getOutputDir());
@@ -231,12 +231,12 @@ public class MergeTheme extends ConventionTask {
     }
 
     @InputDirectory
-    public File getWebappDir() {
-        return webappDir;
+    public File getDiffsDir() {
+        return diffsDir;
     }
 
-    public void setWebappDir(File webappDir) {
-        this.webappDir = webappDir;
+    public void setDiffsDir(File diffsDir) {
+        this.diffsDir = diffsDir;
     }
 
     @OutputDirectory

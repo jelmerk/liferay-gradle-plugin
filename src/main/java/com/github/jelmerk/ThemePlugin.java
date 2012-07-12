@@ -7,7 +7,6 @@ import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.plugins.WarPluginConvention;
-import org.gradle.api.tasks.bundling.War;
 
 import java.io.File;
 import java.util.concurrent.Callable;
@@ -26,25 +25,18 @@ public class ThemePlugin implements Plugin<Project> {
 
         createThemeExtension(project);
 
-
-        War war = (War) project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
-        war.execute();
-
-        war.from(new Callable() {
-            @Override
-            public Object call() throws Exception {
-                return new File(project.getBuildDir(), "theme");
-            }
-        });
-
-//        configureBuildThumbnailRule(project);
-//
+        configureWar(project);
         configureMergeTemplateTask(project);
 //        configureBuildThumbnailTask(project);
     }
 
+    private void configureWar(Project project) {
+        WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
+        warConvention.setWebAppDirName(new File(project.getBuildDir(), "webapp").getAbsolutePath());
+    }
+
     private void createThemeExtension(Project project) {
-        project.getExtensions().create("theme", ThemePluginExtension.class);
+        project.getExtensions().create("theme", ThemePluginExtension.class, project);
     }
 
     private void configureMergeTemplateTask(Project project) {
@@ -72,6 +64,13 @@ public class ThemePlugin implements Plugin<Project> {
             }
         });
 
+        task.getConventionMapping().map("diffsDir", new Callable<File>() {
+            @Override
+            public File call() throws Exception {
+                return themeExtension.getDiffsDir();
+            }
+        });
+
         task.getConventionMapping().map("appServerPortalDir", new Callable<Object>() {
             @Override
             public Object call() throws Exception {
@@ -79,16 +78,12 @@ public class ThemePlugin implements Plugin<Project> {
             }
         });
 
-        task.getConventionMapping().map("webappDir", new Callable<File>() {
+        task.getConventionMapping().map("outputDir", new Callable<File>() {
             @Override
             public File call() throws Exception {
                 return warConvention.getWebAppDir();
             }
         });
-
-//        task.setParentThemeName(themeExtension.getParentThemeName());
-
-        task.setOutputDir(new File(project.getBuildDir(), "theme"));
 
         Task warTask = project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
         warTask.dependsOn(task);

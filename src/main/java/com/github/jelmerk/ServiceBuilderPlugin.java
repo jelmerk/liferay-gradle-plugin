@@ -183,10 +183,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         buildService.getConventionMapping().map("jalopyInputFile", new Callable<File>() {
             @Override
             public File call() throws Exception {
-                if (serviceBuilderExtension.getJalopyInputFile() != null) {
-                    return serviceBuilderExtension.getJalopyInputFile();
-                }
-                return null;
+                return serviceBuilderExtension.getJalopyInputFile();
             }
         });
 
