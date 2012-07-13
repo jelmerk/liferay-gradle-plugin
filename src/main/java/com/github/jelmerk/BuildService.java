@@ -2,12 +2,19 @@ package com.github.jelmerk;
 
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.*;
+
 import org.apache.tools.ant.types.Path;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.ConventionTask;
-import org.gradle.api.tasks.*;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskExecutionException;
+
 
 import java.io.File;
 
@@ -191,7 +198,7 @@ public class BuildService extends ConventionTask {
         File jalopyFile = new File(miscDir, "jalopy.xml");
 
         if (getJalopyInputFile() != null) {
-            org.apache.tools.ant.taskdefs.Copy copy = new org.apache.tools.ant.taskdefs.Copy();
+            Copy copy = new Copy();
             copy.setProject(getAnt().getProject());
             copy.setFile(getJalopyInputFile());
             copy.setTofile(jalopyFile);
