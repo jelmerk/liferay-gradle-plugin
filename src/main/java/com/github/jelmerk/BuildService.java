@@ -1,17 +1,15 @@
 package com.github.jelmerk;
 
-import com.github.jelmerk.util.Files;
 import org.apache.tools.ant.Project;
-import org.apache.tools.ant.taskdefs.Java;
-import org.apache.tools.ant.taskdefs.Mkdir;
+import org.apache.tools.ant.taskdefs.*;
 import org.apache.tools.ant.types.Path;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.tasks.*;
+import org.gradle.api.tasks.Input;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * @author Jelmer Kuperus
@@ -187,22 +185,18 @@ public class BuildService extends ConventionTask {
 
 
     private File prepareWorkingDir() {
-
         File workingDir = getProject().mkdir(new File(getProject().getBuildDir(), "servicebuilder"));
-
-        File miscDir = new File(workingDir, "misc");
-        if (!miscDir.mkdir()) {
-            throw new IllegalStateException("Failed to create directory " + miscDir);
-        }
+        File miscDir = getProject().mkdir(new File(workingDir, "misc"));
 
         File jalopyFile = new File(miscDir, "jalopy.xml");
 
         if (getJalopyInputFile() != null) {
-            try {
-                Files.copy(getJalopyInputFile(), jalopyFile);
-            } catch (IOException e) {
-                throw new TaskExecutionException(this, e);
-            }
+            org.apache.tools.ant.taskdefs.Copy copy = new org.apache.tools.ant.taskdefs.Copy();
+            copy.setProject(getAnt().getProject());
+            copy.setFile(getJalopyInputFile());
+            copy.setTofile(jalopyFile);
+            copy.setOverwrite(true);
+            copy.execute();
         }
 
         return workingDir;
