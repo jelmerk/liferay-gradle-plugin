@@ -7,6 +7,9 @@ group = 'com.github.jelmerk'
 archivesBaseName = 'liferay-plugin'
 version = '0.0.1-SNAPSHOT'
 
+sourceCompatibility = 1.5
+targetCompatibility = 1.5
+
 repositories {
     mavenLocal()
     mavenCentral()
