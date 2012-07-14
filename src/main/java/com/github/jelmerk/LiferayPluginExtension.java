@@ -33,10 +33,7 @@ public class LiferayPluginExtension {
     }
 
     public String getAppServerDirName() {
-        if (appServerDirName != null) {
-            return appServerDirName;
-        }
-        return System.getenv("LIFERAY_HOME");
+        return appServerDirName;
     }
 
     public void setAppServerDirName(String appServerDirName) {

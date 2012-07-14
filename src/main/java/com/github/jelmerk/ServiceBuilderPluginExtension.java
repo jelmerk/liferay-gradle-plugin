@@ -2,6 +2,10 @@ package com.github.jelmerk;
 
 import groovy.lang.Closure;
 import org.gradle.api.Project;
+import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.WarPluginConvention;
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.util.ConfigureUtil;
 
 import java.io.File;
@@ -33,7 +37,12 @@ public class ServiceBuilderPluginExtension {
     }
 
     public String getServiceInputFileName() {
-        return serviceInputFileName;
+        if (serviceInputFileName != null) {
+            return serviceInputFileName;
+        }
+        // TODO : change this to resources or the project root? I know this is what liferay uses but you really don't want to ship your source files
+        WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
+        return new File(warConvention.getWebAppDir(), "WEB-INF/service.xml").getPath();
     }
 
     public void setServiceInputFileName(String serviceInputFileName) {
@@ -41,7 +50,11 @@ public class ServiceBuilderPluginExtension {
     }
 
     public String getImplSrcDirName() {
-        return implSrcDirName;
+        if (implSrcDirName != null) {
+            return implSrcDirName;
+        }
+        return getSourceSetByName(SourceSet.MAIN_SOURCE_SET_NAME)
+                .getAllJava().getSrcDirs().iterator().next().toString();
     }
 
     public void setImplSrcDirName(String implSrcDirName) {
@@ -49,7 +62,11 @@ public class ServiceBuilderPluginExtension {
     }
 
     public String getApiSrcDirName() {
-        return apiSrcDirName;
+        if (apiSrcDirName != null) {
+            return apiSrcDirName;
+        }
+        return getSourceSetByName(ServiceBuilderPlugin.SERVICE_SOURCE_SET_NAME)
+                .getAllJava().getSrcDirs().iterator().next().getPath();
     }
 
     public void setApiSrcDirName(String apiSrcDirName) {
@@ -57,7 +74,11 @@ public class ServiceBuilderPluginExtension {
     }
 
     public String getResourceDirName() {
-        return resourceDirName;
+        if (resourceDirName != null) {
+            return resourceDirName;
+        }
+        return getSourceSetByName(SourceSet.MAIN_SOURCE_SET_NAME)
+                .getResources().getSrcDirs().iterator().next().getPath();
     }
 
     public void setResourceDirName(String resourceDirName) {
@@ -65,9 +86,6 @@ public class ServiceBuilderPluginExtension {
     }
 
     public File getServiceInputFile() {
-        if (getServiceInputFileName() == null) {
-            return null;
-        }
         return project.file(getServiceInputFileName());
     }
 
@@ -79,27 +97,24 @@ public class ServiceBuilderPluginExtension {
     }
 
     public File getImplSrcDir() {
-        if (getImplSrcDirName() == null) {
-            return null;
-        }
-        return project.file(getImplSrcDir());
+        return project.file(getImplSrcDirName());
     }
 
     public File getApiSrcDir() {
-        if (getApiSrcDirName() == null) {
-            return null;
-        }
         return project.file(getApiSrcDirName());
     }
 
     public File getResourceDir() {
-        if (getResourceDirName() == null) {
-            return null;
-        }
         return project.file(getResourceDirName());
     }
 
     public void servicebuilder(Closure closure) {
         ConfigureUtil.configure(closure, this);
+    }
+
+    private SourceSet getSourceSetByName(String name) {
+        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+        SourceSetContainer sourceSets = javaConvention.getSourceSets();
+        return sourceSets.getByName(name);
     }
 }

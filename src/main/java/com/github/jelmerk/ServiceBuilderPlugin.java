@@ -6,22 +6,18 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.WarPluginConvention;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.external.javadoc.StandardJavadocDocletOptions;
 
 import java.io.File;
 import java.util.concurrent.Callable;
-
-import static java.lang.String.format;
 
 /**
  * @author Jelmer Kuperus
@@ -44,9 +40,10 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
 
+        configureSourceSets(project);
         configureConfigurations(project);
         createServiceBuilderExtension(project);
-        configureSourceSets(project);
+
         configureArchives(project);
 
         configureTaskRule(project);
@@ -147,20 +144,10 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
         final LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
 
-        final ServiceBuilderPluginExtension serviceBuilderExtension = project.getExtensions()
-                .getByType(ServiceBuilderPluginExtension.class);
-
         final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
 
-        final JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-
-        SourceSetContainer sourceSets = javaConvention.getSourceSets();
-        SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-        SourceSet servicebuilderSourceSet = sourceSets.getByName(SERVICE_SOURCE_SET_NAME);
-
-        final SourceDirectorySet allMainJava = mainSourceSet.getAllJava();
-        final SourceDirectorySet allServiceBuilderJava = servicebuilderSourceSet.getAllJava();
-        final SourceDirectorySet allResources = mainSourceSet.getResources();
+        final ServiceBuilderPluginExtension serviceBuilderExtension = project.getExtensions()
+                .getByType(ServiceBuilderPluginExtension.class);
 
         buildService.getConventionMapping().map("pluginName", new Callable<String>() {
             @Override
@@ -169,14 +156,10 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
             }
         });
 
-
         buildService.getConventionMapping().map("serviceInputFile", new Callable<File>() {
             @Override
             public File call() throws Exception {
-                if (serviceBuilderExtension.getServiceInputFile() != null) {
-                    return serviceBuilderExtension.getServiceInputFile();
-                }
-                return new File(warConvention.getWebAppDir(), "WEB-INF/service.xml");
+                return serviceBuilderExtension.getServiceInputFile();
             }
         });
 
@@ -190,30 +173,21 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         buildService.getConventionMapping().map("implSrcDir", new Callable<File>() {
             @Override
             public File call() throws Exception {
-                if (serviceBuilderExtension.getImplSrcDir() != null) {
-                    return serviceBuilderExtension.getImplSrcDir();
-                }
-                return allMainJava.getSrcDirs().iterator().next();
+                return serviceBuilderExtension.getImplSrcDir();
             }
         });
 
         buildService.getConventionMapping().map("apiSrcDir", new Callable<File>() {
             @Override
             public File call() throws Exception {
-                if (serviceBuilderExtension.getApiSrcDir() != null) {
-                    return serviceBuilderExtension.getApiSrcDir();
-                }
-                return allServiceBuilderJava.getSrcDirs().iterator().next();
+                return serviceBuilderExtension.getApiSrcDir();
             }
         });
 
         buildService.getConventionMapping().map("resourceDir", new Callable<File>() {
             @Override
             public File call() throws Exception {
-                if (serviceBuilderExtension.getResourceDir() != null) {
-                    return serviceBuilderExtension.getResourceDir();
-                }
-                return allResources.getSrcDirs().iterator().next();
+                return serviceBuilderExtension.getResourceDir();
             }
         });
 

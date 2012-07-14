@@ -15,7 +15,7 @@ public class ThemePluginExtension {
 
     private String diffsDirName = "src/main/diffs";
 
-    private Project project;
+    private final Project project;
 
     public ThemePluginExtension(Project project) {
         this.project = project;
