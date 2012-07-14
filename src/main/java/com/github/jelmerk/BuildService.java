@@ -21,7 +21,7 @@ import java.io.File;
 /**
  * @author Jelmer Kuperus
  */
-public class BuildService extends ConventionTask {
+public class BuildService extends ConventionTask { // TODO: meh conventiontask is an internal api too it seems..
 
     private FileCollection classpath;
 
