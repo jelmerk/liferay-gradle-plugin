@@ -3,8 +3,8 @@ package com.github.jelmerk;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Copy;
 import org.apache.tools.ant.types.FileSet;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.InvalidUserDataException;
-import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputDirectory;
@@ -14,7 +14,7 @@ import java.io.File;
 
 /**
  */
-public class MergeTheme extends ConventionTask {
+public class MergeTheme extends DefaultTask {
 
     private String parentThemeName;
 

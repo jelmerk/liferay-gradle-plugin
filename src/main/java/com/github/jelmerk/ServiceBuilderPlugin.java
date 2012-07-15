@@ -1,11 +1,13 @@
 package com.github.jelmerk;
 
+import org.gradle.BuildAdapter;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
@@ -17,7 +19,6 @@ import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.external.javadoc.StandardJavadocDocletOptions;
 
 import java.io.File;
-import java.util.concurrent.Callable;
 
 /**
  * @author Jelmer Kuperus
@@ -46,11 +47,10 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
         configureArchives(project);
 
-        configureTaskRule(project);
-
-        configureJavadocRule(project);
-
+        configureJavadocTaskDefaults(project);
         configureServiceJavaDoc(project);
+
+        configureBuildServiceTaskDefaults(project);
         configureBuildServiceTask(project);
     }
 
@@ -87,122 +87,16 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         project.getArtifacts().add(SERVICE_CONFIGURATION_NAME, project.getTasks().getByName(JAR_SERVICE));
     }
 
-    private void configureBuildServiceTask(Project project) {
-        BuildService buildService = project.getTasks().add(BUILD_SERVICE, BuildService.class);
-        buildService.setDescription("Builds a liferay service");
-        buildService.setGroup(LiferayBasePlugin.LIFERAY_GROUP);
-    }
 
-    private void configureJavadocRule(Project project) {
-        project.getTasks().withType(Javadoc.class, new Action<Javadoc>() {
+    private void configureBuildServiceTaskDefaults(final Project project) {
+        project.getGradle().addBuildListener(new BuildAdapter() {
             @Override
-            public void execute(Javadoc task) {
-                if (!(task.getOptions() instanceof StandardJavadocDocletOptions)) {
-                    return;
-                }
+            public void projectsEvaluated(Gradle gradle) {
 
-                StandardJavadocDocletOptions castOptions = (StandardJavadocDocletOptions) task.getOptions();
-                castOptions.getTags().add("generated:a:\"ServiceBuilder generated this class. " +
-                    "Modifications in this class will be overwritten the next time it is generated");
-            }
-        });
-    }
+                final LiferayPluginExtension liferayExtension = project.getExtensions()
+                        .getByType(LiferayPluginExtension.class);
 
-
-    private void configureServiceJavaDoc(Project project) {
-        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-
-        SourceSet serviceSourceSet = javaConvention.getSourceSets().getByName(SERVICE_SOURCE_SET_NAME);
-        Javadoc serviceJavadoc = project.getTasks().add(JAVADOC_SERVICE, Javadoc.class);
-        serviceJavadoc.setDescription("Generates Javadoc API documentation for the servicebuilder service api.");
-        serviceJavadoc.setGroup(JavaBasePlugin.DOCUMENTATION_GROUP);
-        serviceJavadoc.setClasspath(serviceSourceSet.getOutput().plus(serviceSourceSet.getCompileClasspath()));
-
-        StandardJavadocDocletOptions options = new StandardJavadocDocletOptions();
-        options.getTags().add("generated:a:\"ServiceBuilder generated this class. " +
-            "Modifications in this class will be overwritten the next time it is generated");
-        serviceJavadoc.setOptions(options);
-
-        serviceJavadoc.setDestinationDir(new File(javaConvention.getDocsDir(), "serviceJavadoc"));
-        serviceJavadoc.setSource(serviceSourceSet.getAllJava());
-
-        Javadoc mainJavadoc =  (Javadoc) project.getTasks().getByName(JavaPlugin.JAVADOC_TASK_NAME);
-        mainJavadoc.dependsOn(serviceJavadoc);
-    }
-
-
-    private void configureTaskRule(final Project project) {
-        project.getTasks().withType(BuildService.class, new Action<BuildService>() {
-            @Override
-            public void execute(BuildService buildService) {
-                configureBuildServiceTaskDefaults(project, buildService);
-            }
-        });
-    }
-
-    protected void configureBuildServiceTaskDefaults(final Project project, final BuildService buildService) {
-
-        final LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
-
-        final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
-
-        final ServiceBuilderPluginExtension serviceBuilderExtension = project.getExtensions()
-                .getByType(ServiceBuilderPluginExtension.class);
-
-        buildService.getConventionMapping().map("pluginName", new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                return project.getName();
-            }
-        });
-
-        buildService.getConventionMapping().map("serviceInputFile", new Callable<File>() {
-            @Override
-            public File call() throws Exception {
-                return serviceBuilderExtension.getServiceInputFile();
-            }
-        });
-
-        buildService.getConventionMapping().map("jalopyInputFile", new Callable<File>() {
-            @Override
-            public File call() throws Exception {
-                return serviceBuilderExtension.getJalopyInputFile();
-            }
-        });
-
-        buildService.getConventionMapping().map("implSrcDir", new Callable<File>() {
-            @Override
-            public File call() throws Exception {
-                return serviceBuilderExtension.getImplSrcDir();
-            }
-        });
-
-        buildService.getConventionMapping().map("apiSrcDir", new Callable<File>() {
-            @Override
-            public File call() throws Exception {
-                return serviceBuilderExtension.getApiSrcDir();
-            }
-        });
-
-        buildService.getConventionMapping().map("resourceDir", new Callable<File>() {
-            @Override
-            public File call() throws Exception {
-                return serviceBuilderExtension.getResourceDir();
-            }
-        });
-
-        buildService.getConventionMapping().map("webappSrcDir", new Callable<File>() {
-            @Override
-            public File call() throws Exception {
-                return warConvention.getWebAppDir();
-            }
-        });
-
-        buildService.getConventionMapping().map("classpath", new Callable<FileCollection>() {
-            @Override
-            public FileCollection call() throws Exception {
-
-                Configuration servicebuilderConfiguration = project.getConfigurations()
+                final Configuration servicebuilderConfiguration = project.getConfigurations()
                         .getByName(SERVICE_BUILDER_CONFIGURATION_NAME);
 
                 if (servicebuilderConfiguration.getDependencies().isEmpty()) {
@@ -232,13 +126,110 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
                     );
 
                     projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, appserverClasspath);
-
                 }
 
-                return servicebuilderConfiguration;
+                project.getTasks().withType(BuildService.class, new Action<BuildService>() {
+
+                    @Override
+                    public void execute(BuildService task) {
+                        if (task.getClasspath() == null) {
+                            task.setClasspath(servicebuilderConfiguration);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    private void configureBuildServiceTask(final Project project) {
+        final BuildService task = project.getTasks().add(BUILD_SERVICE, BuildService.class);
+
+        project.getGradle().addBuildListener(new BuildAdapter() {
+            @Override
+            public void projectsEvaluated(Gradle gradle) {
+
+                final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
+
+                final ServiceBuilderPluginExtension serviceBuilderExtension = project.getExtensions()
+                        .getByType(ServiceBuilderPluginExtension.class);
+
+                if (task.getPluginName() == null) {
+                    task.setPluginName(project.getName());
+                }
+
+                if (task.getServiceInputFile() == null) {
+                    task.setServiceInputFile(serviceBuilderExtension.getServiceInputFile());
+                }
+
+                if (task.getJalopyInputFile() == null) {
+                    task.setJalopyInputFile(serviceBuilderExtension.getJalopyInputFile());
+                }
+
+                if (task.getImplSrcDir() == null) {
+                    task.setImplSrcDir(serviceBuilderExtension.getImplSrcDir());
+                }
+
+                if (task.getApiSrcDir() == null) {
+                    task.setApiSrcDir(serviceBuilderExtension.getApiSrcDir());
+                }
+
+                if (task.getResourceDir() == null) {
+                    task.setResourceDir(serviceBuilderExtension.getResourceDir());
+                }
+
+                if (task.getWebappSrcDir() == null) {
+                    task.setWebappDir(warConvention.getWebAppDir());
+                }
             }
         });
 
-
+        task.setDescription("Builds a liferay service");
+        task.setGroup(LiferayBasePlugin.LIFERAY_GROUP);
     }
+
+    private void configureJavadocTaskDefaults(final Project project) {
+
+        project.getGradle().addBuildListener(new BuildAdapter() {
+            @Override
+            public void projectsEvaluated(Gradle gradle) {
+                project.getTasks().withType(Javadoc.class, new Action<Javadoc>() {
+                    @Override
+                    public void execute(Javadoc task) {
+                        if (task.getOptions() instanceof StandardJavadocDocletOptions) {
+                            StandardJavadocDocletOptions castOptions = (StandardJavadocDocletOptions) task.getOptions();
+
+                            if (castOptions.getTags().isEmpty()) {
+                                castOptions.getTags().add("generated:a:\"ServiceBuilder generated this class. " +
+                                        "Modifications in this class will be overwritten the next time it is generated");
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+
+    private void configureServiceJavaDoc(Project project) {
+        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+
+        SourceSet serviceSourceSet = javaConvention.getSourceSets().getByName(SERVICE_SOURCE_SET_NAME);
+        Javadoc serviceJavadoc = project.getTasks().add(JAVADOC_SERVICE, Javadoc.class);
+        serviceJavadoc.setDescription("Generates Javadoc API documentation for the servicebuilder service api.");
+        serviceJavadoc.setGroup(JavaBasePlugin.DOCUMENTATION_GROUP);
+        serviceJavadoc.setClasspath(serviceSourceSet.getOutput().plus(serviceSourceSet.getCompileClasspath()));
+
+        StandardJavadocDocletOptions options = new StandardJavadocDocletOptions();
+        options.getTags().add("generated:a:\"ServiceBuilder generated this class. " +
+                "Modifications in this class will be overwritten the next time it is generated");
+        serviceJavadoc.setOptions(options);
+
+        serviceJavadoc.setDestinationDir(new File(javaConvention.getDocsDir(), "serviceJavadoc"));
+        serviceJavadoc.setSource(serviceSourceSet.getAllJava());
+
+        Javadoc mainJavadoc = (Javadoc) project.getTasks().getByName(JavaPlugin.JAVADOC_TASK_NAME);
+        mainJavadoc.dependsOn(serviceJavadoc);
+    }
+
+
 }

@@ -1,8 +1,8 @@
 package com.github.jelmerk;
 
 import org.apache.tools.ant.taskdefs.Copy;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.InvalidUserDataException;
-import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
@@ -14,7 +14,7 @@ import java.io.File;
  *
  * @author Jelmer Kuperus
  */
-public class Deploy extends ConventionTask {
+public class Deploy extends DefaultTask {
 
     private File autoDeployDir;
     private File warFile;

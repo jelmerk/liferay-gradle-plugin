@@ -3,9 +3,9 @@ package com.github.jelmerk;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Java;
 import org.apache.tools.ant.types.Path;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -18,7 +18,7 @@ import java.io.File;
 /**
  * @author Jelmer Kuperus
  */
-public class BuildThumbnail extends ConventionTask {
+public class BuildThumbnail extends DefaultTask {
 
     private FileCollection classpath;
 

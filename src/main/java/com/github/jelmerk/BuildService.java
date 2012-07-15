@@ -4,9 +4,9 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.*;
 
 import org.apache.tools.ant.types.Path;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -21,7 +21,7 @@ import java.io.File;
 /**
  * @author Jelmer Kuperus
  */
-public class BuildService extends ConventionTask { // TODO: meh conventiontask is an internal api too it seems..
+public class BuildService extends DefaultTask {
 
     private FileCollection classpath;
 
@@ -86,7 +86,7 @@ public class BuildService extends ConventionTask { // TODO: meh conventiontask i
 
         for (File dep : getClasspath()) {
             antClassPath.createPathElement()
-                     .setLocation(dep);
+                    .setLocation(dep);
         }
 
         javaTask.setProject(antProject);
@@ -269,7 +269,7 @@ public class BuildService extends ConventionTask { // TODO: meh conventiontask i
         return webappSrcDir;
     }
 
-    public void setWebappSrcDir(File webappSrcDir) {
+    public void setWebappDir(File webappSrcDir) {
         this.webappSrcDir = webappSrcDir;
     }
 

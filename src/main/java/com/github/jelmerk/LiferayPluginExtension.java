@@ -4,7 +4,6 @@ import groovy.lang.Closure;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.initialization.dsl.ScriptHandler;
-import org.gradle.api.internal.file.collections.SimpleFileCollection;
 import org.gradle.util.ConfigureUtil;
 
 import java.io.File;
@@ -109,7 +108,7 @@ public class LiferayPluginExtension {
         classPath.addAll(asList(getAppServerGlobalLibDir().listFiles(JarFilenameFilter.getInstance())));
         classPath.addAll(pluginClasspath);
 
-        return new SimpleFileCollection(classPath);
+        return project.files(classPath);
     }
 
     public void liferay(Closure closure) {

@@ -3,9 +3,9 @@ package com.github.jelmerk;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Java;
 import org.apache.tools.ant.types.Path;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.internal.ConventionTask;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
@@ -15,7 +15,7 @@ import java.io.File;
 /**
  * @author Jelmer Kuperus
  */
-public class SassToCss extends ConventionTask {
+public class SassToCss extends DefaultTask {
 
     private FileCollection classpath;
 
