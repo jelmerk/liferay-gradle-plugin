@@ -25,7 +25,7 @@ import java.io.File;
  */
 public class ServiceBuilderPlugin implements Plugin<Project> {
 
-    public static final String BUILD_SERVICE = "generateService";
+    public static final String GENERATE_SERVICE = "generateService";
 
     public static final String JAVADOC_SERVICE = "javadocService";
 
@@ -142,7 +142,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     }
 
     private void configureBuildServiceTask(final Project project) {
-        final BuildService task = project.getTasks().add(BUILD_SERVICE, BuildService.class);
+        final BuildService task = project.getTasks().add(GENERATE_SERVICE, BuildService.class);
 
         project.getGradle().addBuildListener(new BuildAdapter() {
             @Override
