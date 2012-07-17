@@ -6,11 +6,9 @@ import org.apache.tools.ant.types.Path;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.logging.LogLevel;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
@@ -36,33 +34,12 @@ public class BuildThumbnail extends DefaultTask {
     @TaskAction
     public void buildThumbnail() {
 
-        if (getOriginalFile() == null) {
-            throw new InvalidUserDataException("Please specify a originalFile");
-        }
-
-        if (getClasspath() == null) {
-            throw new InvalidUserDataException("Please specify the classpath");
-        }
-
-        if (getThumbnailFile() == null) {
-            throw new InvalidUserDataException("Please specify a thumbnailFile");
-        }
-
         if (getWidth() <= 0) {
             throw new InvalidUserDataException("Please specify a valid width");
         }
 
         if (getHeight() <= 0) {
             throw new InvalidUserDataException("Please specify a valid height");
-        }
-
-        // TODO: i guess we should not generate thumbnails if someone manually added one as well hmmm how do we do that..
-
-
-        if (!getOriginalFile().exists()) {
-            getLogger().log(LogLevel.INFO, getOriginalFile().getAbsolutePath() +
-                    " does not exist, not generating thumbnail image.");
-            return;
         }
 
         Java javaTask = new Java();
@@ -74,7 +51,7 @@ public class BuildThumbnail extends DefaultTask {
 
         for (File dep : getClasspath()) {
             antClasspath.createPathElement()
-                     .setLocation(dep);
+                    .setLocation(dep);
         }
 
         javaTask.setProject(antProject);

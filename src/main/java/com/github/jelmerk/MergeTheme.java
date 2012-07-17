@@ -4,7 +4,6 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Copy;
 import org.apache.tools.ant.types.FileSet;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputDirectory;
@@ -27,22 +26,6 @@ public class MergeTheme extends DefaultTask {
 
     @TaskAction
     public void mergeTheme() {
-
-        if (getOutputDir() == null) {
-            throw new InvalidUserDataException("Please specify a valid outputDir.");
-        }
-
-        if (getAppServerPortalDir() == null) {
-            throw new InvalidUserDataException("Please specify a valid appServerPortalDir.");
-        }
-
-        if (getParentThemeName() == null) {
-            throw new InvalidUserDataException("Please specify a valid parentThemeName.");
-        }
-
-        if (getThemeType() == null) {
-            throw new InvalidUserDataException("Please specify a valid themeType.");
-        }
 
         if ("_unstyled".equals(getParentThemeName())) {
             copyUnstyledTheme();

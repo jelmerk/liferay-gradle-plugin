@@ -2,7 +2,6 @@ package com.github.jelmerk;
 
 import org.apache.tools.ant.taskdefs.Copy;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
@@ -21,18 +20,9 @@ public class Deploy extends DefaultTask {
 
     /**
      * Performs the deploy task.
-     *
-     * @throws InvalidUserDataException in case any of the required properties are set to an invalid value
      */
     @TaskAction
     public void deploy() {
-        if (getAutoDeployDir() == null || !getAutoDeployDir().exists()) {
-            throw new InvalidUserDataException("Please specify a valid autoDeployDir");
-        }
-        if (getWarFile() == null || !getWarFile().exists()) {
-            throw new InvalidUserDataException("Please specify a valid warFile");
-        }
-
         Copy copy = new Copy();
 
         copy.setFile(getWarFile());

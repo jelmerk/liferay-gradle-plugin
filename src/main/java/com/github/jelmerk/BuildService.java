@@ -5,7 +5,6 @@ import org.apache.tools.ant.taskdefs.*;
 
 import org.apache.tools.ant.types.Path;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -37,26 +36,6 @@ public class BuildService extends DefaultTask {
 
     @TaskAction
     public void buildService() {
-
-        if (getPluginName() == null) {
-            throw new InvalidUserDataException("Please specify a pluginName.");
-        }
-
-        if (getServiceInputFile() == null) {
-            throw new InvalidUserDataException("Please specify a serviceInputFile.");
-        }
-
-        if (getClasspath() == null) {
-            throw new InvalidUserDataException("Please specify a classpath.");
-        }
-
-        if (!getServiceInputFile().exists()) {
-            throw new InvalidUserDataException("ServiceInputFile " + getServiceInputFile() + " does not exist.");
-        }
-
-        if (getJalopyInputFile() != null && !getJalopyInputFile().exists()) {
-            throw new InvalidUserDataException("JalopyInputFile " + getJalopyInputFile() + " does not exist.");
-        }
 
         // the Jalopy file to use is actually not a parameter you can pass to service builder it just looks at a number
         // of predefined locations on the filesystem. So we set up a working dir where we mimic the layout

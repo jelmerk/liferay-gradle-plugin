@@ -4,7 +4,6 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Java;
 import org.apache.tools.ant.types.Path;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
@@ -25,18 +24,6 @@ public class SassToCss extends DefaultTask {
 
     @TaskAction
     public void sassToCss() {
-
-        if (getSassDir() == null) {
-            throw new InvalidUserDataException("Please specify a valid sassDir");
-        }
-
-        if (getClasspath() == null) {
-            throw new InvalidUserDataException("Please specify the classpath");
-        }
-
-        if (getAppServerPortalDir() == null) {
-            throw new InvalidUserDataException("Please specify the appServerPortalDir");
-        }
 
         Java javaTask = new Java();
 
