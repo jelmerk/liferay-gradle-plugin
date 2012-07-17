@@ -57,7 +57,7 @@ public class MergeTheme extends DefaultTask {
         copyDiffs();
     }
 
-    protected void copyDiffs() {
+    private void copyDiffs() {
         Project antProject = getAnt().getProject();
 
         FileSet mainFileSet = new FileSet();
@@ -71,7 +71,7 @@ public class MergeTheme extends DefaultTask {
         mainCopy.execute();
     }
 
-    protected void copyUnstyledTheme() {
+    private void copyUnstyledTheme() {
 
         Project antProject = getAnt().getProject();
 
@@ -116,7 +116,7 @@ public class MergeTheme extends DefaultTask {
          */
     }
 
-    protected void copyStyledTheme() {
+    private void copyStyledTheme() {
 
 
         copyUnstyledTheme();
@@ -158,7 +158,7 @@ public class MergeTheme extends DefaultTask {
          */
     }
 
-    protected void copyClassicTheme() {
+    private void copyClassicTheme() {
 
         Project antProject = getAnt().getProject();
 

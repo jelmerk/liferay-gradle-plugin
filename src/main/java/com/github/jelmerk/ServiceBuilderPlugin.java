@@ -16,7 +16,6 @@ import org.gradle.api.plugins.WarPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.javadoc.Javadoc;
-import org.gradle.external.javadoc.StandardJavadocDocletOptions;
 
 import java.io.File;
 
@@ -47,7 +46,6 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
         configureArchives(project);
 
-        configureJavadocTaskDefaults(project);
         configureServiceJavaDoc(project);
 
         configureBuildServiceTaskDefaults(project);
@@ -187,29 +185,6 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         task.setGroup(LiferayBasePlugin.LIFERAY_GROUP);
     }
 
-    private void configureJavadocTaskDefaults(final Project project) {
-
-        project.getGradle().addBuildListener(new BuildAdapter() {
-            @Override
-            public void projectsEvaluated(Gradle gradle) {
-                project.getTasks().withType(Javadoc.class, new Action<Javadoc>() {
-                    @Override
-                    public void execute(Javadoc task) {
-                        if (task.getOptions() instanceof StandardJavadocDocletOptions) {
-                            StandardJavadocDocletOptions castOptions = (StandardJavadocDocletOptions) task.getOptions();
-
-                            if (castOptions.getTags().isEmpty()) {
-                                castOptions.getTags().add("generated:a:\"ServiceBuilder generated this class. " +
-                                        "Modifications in this class will be overwritten the next time it is generated");
-                            }
-                        }
-                    }
-                });
-            }
-        });
-    }
-
-
     private void configureServiceJavaDoc(Project project) {
         JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
 
@@ -218,12 +193,6 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         serviceJavadoc.setDescription("Generates Javadoc API documentation for the servicebuilder service api.");
         serviceJavadoc.setGroup(JavaBasePlugin.DOCUMENTATION_GROUP);
         serviceJavadoc.setClasspath(serviceSourceSet.getOutput().plus(serviceSourceSet.getCompileClasspath()));
-
-        StandardJavadocDocletOptions options = new StandardJavadocDocletOptions();
-        options.getTags().add("generated:a:\"ServiceBuilder generated this class. " +
-                "Modifications in this class will be overwritten the next time it is generated");
-        serviceJavadoc.setOptions(options);
-
         serviceJavadoc.setDestinationDir(new File(javaConvention.getDocsDir(), "serviceJavadoc"));
         serviceJavadoc.setSource(serviceSourceSet.getAllJava());
 

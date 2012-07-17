@@ -10,6 +10,7 @@ import org.gradle.api.logging.LogLevel;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
@@ -30,7 +31,7 @@ public class BuildThumbnail extends DefaultTask {
 
     private int width = 0;
 
-    private boolean overwrite;
+    private boolean overwrite = true;
 
     @TaskAction
     public void buildThumbnail() {
@@ -79,20 +80,20 @@ public class BuildThumbnail extends DefaultTask {
         javaTask.setProject(antProject);
         javaTask.setClasspath(antClasspath);
 
-        javaTask.createJvmarg()
+        javaTask.createArg()
                 .setLine("thumbnail.original.file=" + getOriginalFile().getAbsolutePath());
 
-        javaTask.createJvmarg()
+        javaTask.createArg()
                 .setLine("thumbnail.thumbnail.file=" + getThumbnailFile().getAbsolutePath());
 
-        javaTask.createJvmarg()
+        javaTask.createArg()
                 .setLine("thumbnail.height=" + getHeight());
 
-        javaTask.createJvmarg()
+        javaTask.createArg()
                 .setLine("thumbnail.width=" + getWidth());
 
-        javaTask.createJvmarg()
-                .setLine("thumbnail.overwrite=" + getHeight());
+        javaTask.createArg()
+                .setLine("thumbnail.overwrite=" + getOverwrite());
 
         javaTask.execute();
 
@@ -155,7 +156,7 @@ public class BuildThumbnail extends DefaultTask {
     }
 
     @Input
-    public boolean isOverwrite() {
+    public boolean getOverwrite() {
         return overwrite;
     }
 

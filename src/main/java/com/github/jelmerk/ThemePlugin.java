@@ -8,6 +8,7 @@ import org.gradle.api.Task;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.plugins.WarPluginConvention;
+import org.gradle.api.specs.Spec;
 
 import java.io.File;
 
@@ -29,7 +30,9 @@ public class ThemePlugin implements Plugin<Project> {
 
         configureMergeTemplateTaskDefaults(project);
         configureMergeTemplateTask(project);
-//        configureBuildThumbnailTask(project);
+
+        configureBuildThumbnailTaskDefaults(project);
+        configureBuildThumbnailTask(project);
     }
 
 
@@ -93,9 +96,6 @@ public class ThemePlugin implements Plugin<Project> {
                 }
             }
         });
-
-        Task warTask = project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
-        warTask.dependsOn(task);
     }
 
     private void configureBuildThumbnailTaskDefaults(final Project project) {
@@ -118,6 +118,10 @@ public class ThemePlugin implements Plugin<Project> {
     }
 
     private void configureBuildThumbnailTask(final Project project) {
+
+        final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
+        final ThemePluginExtension themeExtension = project.getExtensions().getByType(ThemePluginExtension.class);
+
         Task mergeTask = project.getTasks().getByName(MERGE_THEME);
 
         final BuildThumbnail task = project.getTasks().add(BUILD_THUMBNAIL, BuildThumbnail.class);
@@ -127,20 +131,31 @@ public class ThemePlugin implements Plugin<Project> {
         project.getGradle().addBuildListener(new BuildAdapter() {
             @Override
             public void projectsEvaluated(Gradle gradle) {
-                WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
 
                 // only set the default if nothing was changed from say a configuration closure
 
                 if (task.getThumbnailFile() == null) {
-                    task.setThumbnailFile(new File(project.getBuildDir(), "theme/images/thumbnail.png"));
+                    task.setThumbnailFile(new File(warConvention.getWebAppDir(), "images/thumbnail.png"));
                 }
 
                 if (task.getOriginalFile() == null) {
-                    task.setOriginalFile(new File(warConvention.getWebAppDir(), "images/screenshot.png"));
+                    task.setOriginalFile(new File(themeExtension.getDiffsDir(), "images/screenshot.png"));
                 }
             }
         });
         task.dependsOn(mergeTask);
+
+        task.onlyIf(new Spec<Task>() {
+            @Override
+            public boolean isSatisfiedBy(Task element) {
+                return new File(themeExtension.getDiffsDir(), "images/screenshot.png").exists() &&
+                        !new File(themeExtension.getDiffsDir(), "images/thumbnail.png").exists();
+            }
+        });
+
+
+        Task warTask = project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
+        warTask.dependsOn(task);
     }
 
 }
