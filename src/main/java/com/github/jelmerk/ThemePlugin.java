@@ -47,23 +47,7 @@ public class ThemePlugin implements Plugin<Project> {
 
 
     private void configureMergeTemplateTaskDefaults(final Project project) {
-        project.getGradle().addBuildListener(new BuildAdapter() {
-            @Override
-            public void projectsEvaluated(Gradle gradle) {
-
-                final LiferayPluginExtension liferayExtension = project.getExtensions()
-                        .getByType(LiferayPluginExtension.class);
-
-                project.getTasks().withType(MergeTheme.class, new Action<MergeTheme>() {
-                    @Override
-                    public void execute(MergeTheme mergeTheme) {
-                        if (mergeTheme.getAppServerPortalDir() == null) {
-                            mergeTheme.setAppServerPortalDir(liferayExtension.getAppServerPortalDir());
-                        }
-                    }
-                });
-            }
-        });
+        project.getGradle().addBuildListener(new MergeTemplateTaskDefaultsBuildListener(project));
     }
 
     private void configureMergeTemplateTask(Project project) {
@@ -75,46 +59,11 @@ public class ThemePlugin implements Plugin<Project> {
         final MergeTheme task = project.getTasks().add(MERGE_THEME, MergeTheme.class);
         task.setThemeType(themeExtension.getThemeType());
 
-        project.getGradle().addBuildListener(new BuildAdapter() {
-            @Override
-            public void projectsEvaluated(Gradle gradle) {
-
-                if (task.getThemeType() == null) {
-                    task.setThemeType(themeExtension.getThemeType());
-                }
-
-                if (task.getParentThemeName() == null) {
-                    task.setParentThemeName(themeExtension.getParentThemeName());
-                }
-
-                if (task.getDiffsDir() == null) {
-                    task.setDiffsDir(themeExtension.getDiffsDir());
-                }
-
-                if (task.getOutputDir() == null) {
-                    task.setOutputDir(warConvention.getWebAppDir());
-                }
-            }
-        });
+        project.getGradle().addBuildListener(new MergeTemplateTaskBuildListener(task, themeExtension, warConvention));
     }
 
     private void configureBuildThumbnailTaskDefaults(final Project project) {
-        project.getGradle().addBuildListener(new BuildAdapter() {
-            @Override
-            public void projectsEvaluated(Gradle gradle) {
-                final LiferayPluginExtension liferayExtension = project.getExtensions()
-                        .getByType(LiferayPluginExtension.class);
-
-                project.getTasks().withType(BuildThumbnail.class, new Action<BuildThumbnail>() {
-                    @Override
-                    public void execute(BuildThumbnail task) {
-                        if (task.getClasspath() == null) {
-                            task.setClasspath(liferayExtension.getPortalClasspath());
-                        }
-                    }
-                });
-            }
-        });
+        project.getGradle().addBuildListener(new BuildThumbnailTaskDefaultsBuildListener(project));
     }
 
     private void configureBuildThumbnailTask(final Project project) {
@@ -125,37 +74,151 @@ public class ThemePlugin implements Plugin<Project> {
 
         final BuildThumbnail task = project.getTasks().add(BUILD_THUMBNAIL, BuildThumbnail.class);
 
-        project.getGradle().addBuildListener(new BuildAdapter() {
-            @Override
-            public void projectsEvaluated(Gradle gradle) {
-
-                // only set the default if nothing was changed from say a configuration closure
-
-                if (task.getOriginalFile() == null) {
-                    task.setOriginalFile(new File(themeExtension.getDiffsDir(), "images/screenshot.png"));
-                }
-
-                if (task.getThumbnailFile() == null) {
-                    task.setThumbnailFile(new File(warConvention.getWebAppDir(), "images/thumbnail.png"));
-                }
-            }
-        });
+        project.getGradle().addBuildListener(new BuildThumbnailTaskBuildListener(task, themeExtension, warConvention));
         task.dependsOn(mergeTask);
 
-        task.onlyIf(new Spec<Task>() {
-            @Override
-            public boolean isSatisfiedBy(Task element) {
-                BuildThumbnail castTask = (BuildThumbnail) element; //NOSONAR
-
-                return castTask.getOriginalFile().exists() &&
-                        !new File(themeExtension.getDiffsDir(), "images/thumbnail.png").exists();
-            }
-
-
-        });
+        task.onlyIf(new ThumbnailTaskOnlyIfSpec(themeExtension));
 
         Task warTask = project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
         warTask.dependsOn(task);
     }
 
+    private static class BuildThumbnailTaskBuildListener extends BuildAdapter {
+        private final BuildThumbnail task;
+        private final ThemePluginExtension themeExtension;
+        private final WarPluginConvention warConvention;
+
+        public BuildThumbnailTaskBuildListener(BuildThumbnail task,
+                                               ThemePluginExtension themeExtension,
+                                               WarPluginConvention warConvention) {
+            this.task = task;
+            this.themeExtension = themeExtension;
+            this.warConvention = warConvention;
+        }
+
+        @Override
+        public void projectsEvaluated(Gradle gradle) {
+
+            // only set the default if nothing was changed from say a configuration closure
+
+            if (task.getOriginalFile() == null) {
+                task.setOriginalFile(new File(themeExtension.getDiffsDir(), "images/screenshot.png"));
+            }
+
+            if (task.getThumbnailFile() == null) {
+                task.setThumbnailFile(new File(warConvention.getWebAppDir(), "images/thumbnail.png"));
+            }
+        }
+    }
+
+    private static class BuildThumbnailTaskDefaultsBuildListener extends BuildAdapter {
+        private final Project project;
+
+        public BuildThumbnailTaskDefaultsBuildListener(Project project) {
+            this.project = project;
+        }
+
+        @Override
+        public void projectsEvaluated(Gradle gradle) {
+            LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
+            project.getTasks().withType(BuildThumbnail.class, new SetBuildThumbnailDefaultsAction(liferayExtension));
+        }
+
+        private static class SetBuildThumbnailDefaultsAction implements Action<BuildThumbnail> {
+            private final LiferayPluginExtension liferayExtension;
+
+            public SetBuildThumbnailDefaultsAction(LiferayPluginExtension liferayExtension) {
+                this.liferayExtension = liferayExtension;
+            }
+
+            @Override
+            public void execute(BuildThumbnail task) {
+                if (task.getClasspath() == null) {
+                    task.setClasspath(liferayExtension.getPortalClasspath());
+                }
+            }
+        }
+    }
+
+    private static class MergeTemplateTaskBuildListener extends BuildAdapter {
+        private final MergeTheme task;
+        private final ThemePluginExtension themeExtension;
+        private final WarPluginConvention warConvention;
+
+        public MergeTemplateTaskBuildListener(MergeTheme task,
+                                              ThemePluginExtension themeExtension,
+                                              WarPluginConvention warConvention) {
+            this.task = task;
+            this.themeExtension = themeExtension;
+            this.warConvention = warConvention;
+        }
+
+        @Override
+        public void projectsEvaluated(Gradle gradle) {
+
+            if (task.getThemeType() == null) {
+                task.setThemeType(themeExtension.getThemeType());
+            }
+
+            if (task.getParentThemeName() == null) {
+                task.setParentThemeName(themeExtension.getParentThemeName());
+            }
+
+            if (task.getDiffsDir() == null) {
+                task.setDiffsDir(themeExtension.getDiffsDir());
+            }
+
+            if (task.getOutputDir() == null) {
+                task.setOutputDir(warConvention.getWebAppDir());
+            }
+        }
+    }
+
+    private static class MergeTemplateTaskDefaultsBuildListener extends BuildAdapter {
+        private final Project project;
+
+        public MergeTemplateTaskDefaultsBuildListener(Project project) {
+            this.project = project;
+        }
+
+        @Override
+        public void projectsEvaluated(Gradle gradle) {
+
+            final LiferayPluginExtension liferayExtension = project.getExtensions()
+                    .getByType(LiferayPluginExtension.class);
+
+            project.getTasks().withType(MergeTheme.class, new SetMergeThemeTaskDefaultsAction(liferayExtension));
+        }
+
+        private static class SetMergeThemeTaskDefaultsAction implements Action<MergeTheme> {
+            private final LiferayPluginExtension liferayExtension;
+
+            public SetMergeThemeTaskDefaultsAction(LiferayPluginExtension liferayExtension) {
+                this.liferayExtension = liferayExtension;
+            }
+
+            @Override
+            public void execute(MergeTheme mergeTheme) {
+                if (mergeTheme.getAppServerPortalDir() == null) {
+                    mergeTheme.setAppServerPortalDir(liferayExtension.getAppServerPortalDir());
+                }
+            }
+        }
+    }
+
+    private static class ThumbnailTaskOnlyIfSpec implements Spec<Task> {
+        private final ThemePluginExtension themeExtension;
+
+        public ThumbnailTaskOnlyIfSpec(ThemePluginExtension themeExtension) {
+            this.themeExtension = themeExtension;
+        }
+
+        @Override
+        public boolean isSatisfiedBy(Task element) {
+            BuildThumbnail castTask = (BuildThumbnail) element; //NOSONAR
+
+            return castTask.getOriginalFile().exists() &&
+                    !new File(themeExtension.getDiffsDir(), "images/thumbnail.png").exists();
+        }
+    }
 }

@@ -89,107 +89,15 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
 
     private void configureBuildServiceTaskDefaults(final Project project) {
-        project.getGradle().addBuildListener(new BuildAdapter() {
-            @Override
-            public void projectsEvaluated(Gradle gradle) {
-
-                final LiferayPluginExtension liferayExtension = project.getExtensions()
-                        .getByType(LiferayPluginExtension.class);
-
-                final Configuration servicebuilderConfiguration = project.getConfigurations()
-                        .getByName(SERVICE_BUILDER_CONFIGURATION_NAME);
-
-                if (servicebuilderConfiguration.getDependencies().isEmpty()) {
-
-                    // the sdk dependencies : we will need to download those
-
-                    DependencyHandler projectDependencies = project.getDependencies();
-
-                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "com.thoughtworks.qdox:qdox:1.12");
-                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "jalopy:jalopy:1.5rc3");
-                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "javax.servlet:servlet-api:2.5");
-                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "javax.servlet.jsp:jsp-api:2.1");
-                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "javax.activation:activation:1.1");
-
-                    //  the portal classpath dependencies : we have those locally
-
-                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, liferayExtension.getPortalClasspath());
-
-                    // the common classpath dependencies : we can get from the portal
-
-                    File appServerGlobalLibDirName = liferayExtension.getAppServerGlobalLibDir();
-
-                    FileCollection appserverClasspath = project.files(
-                            new File(appServerGlobalLibDirName, "commons-digester.jar"),
-                            new File(appServerGlobalLibDirName, "commons-lang.jar"),
-                            new File(appServerGlobalLibDirName, "easyconf.jar")
-                    );
-
-                    projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, appserverClasspath);
-                }
-
-                project.getTasks().withType(BuildService.class, new Action<BuildService>() {
-
-                    @Override
-                    public void execute(BuildService task) {
-                        if (task.getClasspath() == null) {
-                            task.setClasspath(servicebuilderConfiguration);
-                        }
-                    }
-                });
-            }
-        });
+        project.getGradle().addBuildListener(new BuildServiceTaskDefaultsBuildListener(project));
     }
 
     private void configureBuildServiceTask(final Project project) {
         final BuildService task = project.getTasks().add(GENERATE_SERVICE, BuildService.class);
 
-        project.getGradle().addBuildListener(new BuildAdapter() {
-            @Override
-            public void projectsEvaluated(Gradle gradle) {
+        project.getGradle().addBuildListener(new BuildServiceTaskBuildListener(project, task));
 
-                final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
-
-                final ServiceBuilderPluginExtension serviceBuilderExtension = project.getExtensions()
-                        .getByType(ServiceBuilderPluginExtension.class);
-
-                if (task.getPluginName() == null) {
-                    task.setPluginName(project.getName());
-                }
-
-                if (task.getServiceInputFile() == null) {
-                    task.setServiceInputFile(serviceBuilderExtension.getServiceInputFile());
-                }
-
-                if (task.getJalopyInputFile() == null) {
-                    task.setJalopyInputFile(serviceBuilderExtension.getJalopyInputFile());
-                }
-
-                if (task.getImplSrcDir() == null) {
-                    task.setImplSrcDir(serviceBuilderExtension.getImplSrcDir());
-                }
-
-                if (task.getApiSrcDir() == null) {
-                    task.setApiSrcDir(serviceBuilderExtension.getApiSrcDir());
-                }
-
-                if (task.getResourceDir() == null) {
-                    task.setResourceDir(serviceBuilderExtension.getResourceDir());
-                }
-
-                if (task.getWebappSrcDir() == null) {
-                    task.setWebappDir(warConvention.getWebAppDir());
-                }
-            }
-        });
-
-        task.onlyIf(new Spec<Task>() {
-            @Override
-            public boolean isSatisfiedBy(Task element) {
-                BuildService castTask = (BuildService) element; //NOSONAR
-                return castTask.getServiceInputFile().exists();
-            }
-        });
+        task.onlyIf(new BuildServiceTaskOnlyIfSpec());
 
         task.setDescription("Builds a liferay service");
         task.setGroup(LiferayBasePlugin.LIFERAY_GROUP);
@@ -211,4 +119,124 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     }
 
 
+    private static class BuildServiceTaskBuildListener extends BuildAdapter {
+        private final Project project;
+        private final BuildService task;
+
+        public BuildServiceTaskBuildListener(Project project, BuildService task) {
+            this.project = project;
+            this.task = task;
+        }
+
+        @Override
+        public void projectsEvaluated(Gradle gradle) {
+
+            final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
+
+            final ServiceBuilderPluginExtension serviceBuilderExtension = project.getExtensions()
+                    .getByType(ServiceBuilderPluginExtension.class);
+
+            if (task.getPluginName() == null) {
+                task.setPluginName(project.getName());
+            }
+
+            if (task.getServiceInputFile() == null) {
+                task.setServiceInputFile(serviceBuilderExtension.getServiceInputFile());
+            }
+
+            if (task.getJalopyInputFile() == null) {
+                task.setJalopyInputFile(serviceBuilderExtension.getJalopyInputFile());
+            }
+
+            if (task.getImplSrcDir() == null) {
+                task.setImplSrcDir(serviceBuilderExtension.getImplSrcDir());
+            }
+
+            if (task.getApiSrcDir() == null) {
+                task.setApiSrcDir(serviceBuilderExtension.getApiSrcDir());
+            }
+
+            if (task.getResourceDir() == null) {
+                task.setResourceDir(serviceBuilderExtension.getResourceDir());
+            }
+
+            if (task.getWebappSrcDir() == null) {
+                task.setWebappDir(warConvention.getWebAppDir());
+            }
+        }
+    }
+
+    private static class BuildServiceTaskDefaultsBuildListener extends BuildAdapter {
+        private final Project project;
+
+        public BuildServiceTaskDefaultsBuildListener(Project project) {
+            this.project = project;
+        }
+
+        @Override
+        public void projectsEvaluated(Gradle gradle) {
+
+            final LiferayPluginExtension liferayExtension = project.getExtensions()
+                    .getByType(LiferayPluginExtension.class);
+
+            final Configuration servicebuilderConfiguration = project.getConfigurations()
+                    .getByName(SERVICE_BUILDER_CONFIGURATION_NAME);
+
+            if (servicebuilderConfiguration.getDependencies().isEmpty()) {
+
+                // the sdk dependencies : we will need to download those
+
+                DependencyHandler projectDependencies = project.getDependencies();
+
+                projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "com.thoughtworks.qdox:qdox:1.12");
+                projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "jalopy:jalopy:1.5rc3");
+                projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "javax.servlet:servlet-api:2.5");
+                projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "javax.servlet.jsp:jsp-api:2.1");
+                projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, "javax.activation:activation:1.1");
+
+                //  the portal classpath dependencies : we have those locally
+
+                projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, liferayExtension.getPortalClasspath());
+
+                // the common classpath dependencies : we can get from the portal
+
+                File appServerGlobalLibDirName = liferayExtension.getAppServerGlobalLibDir();
+
+                FileCollection appserverClasspath = project.files(
+                        new File(appServerGlobalLibDirName, "commons-digester.jar"),
+                        new File(appServerGlobalLibDirName, "commons-lang.jar"),
+                        new File(appServerGlobalLibDirName, "easyconf.jar")
+                );
+
+                projectDependencies.add(SERVICE_BUILDER_CONFIGURATION_NAME, appserverClasspath);
+            }
+
+            project.getTasks().withType(BuildService.class,
+                    new SetBuildServiceTaskDefaultsAction(servicebuilderConfiguration));
+        }
+
+        private static class SetBuildServiceTaskDefaultsAction implements Action<BuildService> {
+
+            private final Configuration servicebuilderConfiguration;
+
+            public SetBuildServiceTaskDefaultsAction(Configuration servicebuilderConfiguration) {
+                this.servicebuilderConfiguration = servicebuilderConfiguration;
+            }
+
+            @Override
+            public void execute(BuildService task) {
+                if (task.getClasspath() == null) {
+                    task.setClasspath(servicebuilderConfiguration);
+                }
+            }
+        }
+    }
+
+    private static class BuildServiceTaskOnlyIfSpec implements Spec<Task> {
+        @Override
+        public boolean isSatisfiedBy(Task element) {
+            BuildService castTask = (BuildService) element; //NOSONAR
+            return castTask.getServiceInputFile().exists();
+        }
+    }
 }

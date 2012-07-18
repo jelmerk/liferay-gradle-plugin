@@ -37,13 +37,21 @@ public class BuildService extends DefaultTask {
 
     @TaskAction
     public void buildService() {
-
-        // the Jalopy file to use is actually not a parameter you can pass to service builder it just looks at a number
-        // of predefined locations on the filesystem. So we set up a working dir where we mimic the layout
-        // servicebuilder expects as a workaround
-
         File workingDir = prepareWorkingDir();
+        createOutputDirectories();
+        String processOutput = buildService(workingDir);
+        echoOutput(processOutput);
 
+        if (didNotExecuteSuccessfully(processOutput)) {
+            throw new TaskExecutionException(this, null);
+        }
+    }
+
+    private boolean didNotExecuteSuccessfully(String processOutput) {
+        return processOutput != null && processOutput.contains("Error");
+    }
+
+    private void createOutputDirectories() {
         Mkdir mkServicebuilderMainSourceSetDir = new Mkdir();
         mkServicebuilderMainSourceSetDir.setDir(getImplSrcDir());
         mkServicebuilderMainSourceSetDir.execute();
@@ -51,7 +59,32 @@ public class BuildService extends DefaultTask {
         Mkdir mkSqlDir = new Mkdir();
         mkSqlDir.setDir(new File(getWebappSrcDir(), "sql"));
         mkSqlDir.execute();
+    }
 
+    private File prepareWorkingDir() {
+
+        // the Jalopy file to use is not a parameter you can pass to service builder it just looks at a number
+        // of predefined locations on the filesystem. So we set up a working dir where we mimic the layout
+        // servicebuilder expects as a workaround
+
+        File workingDir = getProject().mkdir(new File(getProject().getBuildDir(), "servicebuilder"));
+        File miscDir = getProject().mkdir(new File(workingDir, "misc"));
+
+        File jalopyFile = new File(miscDir, "jalopy.xml");
+
+        if (getJalopyInputFile() != null) {
+            Copy copy = new Copy();
+            copy.setProject(getAnt().getProject());
+            copy.setFile(getJalopyInputFile());
+            copy.setTofile(jalopyFile);
+            copy.setOverwrite(true);
+            copy.execute();
+        }
+
+        return workingDir;
+    }
+
+    private String buildService(File workingDir) {
         Java javaTask = new Java();
         javaTask.setTaskName("service builder");
         javaTask.setClassname("com.liferay.portal.tools.servicebuilder.ServiceBuilder");
@@ -161,35 +194,14 @@ public class BuildService extends DefaultTask {
 
         javaTask.execute();
 
-        String processOutput = antProject.getProperty("service.test.output");
-
-        Echo echo = new Echo();
-        echo.setProject(antProject);
-        echo.setMessage(processOutput);
-        echo.execute();
-
-        if (processOutput != null && processOutput.contains("Error")) {
-            throw new TaskExecutionException(this, null);
-        }
+        return antProject.getProperty("service.test.output");
     }
 
-
-    private File prepareWorkingDir() {
-        File workingDir = getProject().mkdir(new File(getProject().getBuildDir(), "servicebuilder"));
-        File miscDir = getProject().mkdir(new File(workingDir, "misc"));
-
-        File jalopyFile = new File(miscDir, "jalopy.xml");
-
-        if (getJalopyInputFile() != null) {
-            Copy copy = new Copy();
-            copy.setProject(getAnt().getProject());
-            copy.setFile(getJalopyInputFile());
-            copy.setTofile(jalopyFile);
-            copy.setOverwrite(true);
-            copy.execute();
-        }
-
-        return workingDir;
+    private void echoOutput(String processOutput) {
+        Echo echo = new Echo();
+        //echo.setProject(getAnt().getAntProject());
+        echo.setMessage(processOutput);
+        echo.execute();
     }
 
     @Input

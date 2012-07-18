@@ -37,56 +37,85 @@ public class PortletPlugin implements Plugin<Project> {
     }
 
     private void configureSassToCssTaskDefaults(final Project project) {
-        project.getGradle().addBuildListener(new BuildAdapter() {
-            @Override
-            public void projectsEvaluated(Gradle gradle) {
-
-                final LiferayPluginExtension liferayPluginExtension = project.getExtensions()
-                        .findByType(LiferayPluginExtension.class);
-
-                final Configuration sassConfiguration = project.getConfigurations().getByName("sass");
-
-                if (sassConfiguration.getDependencies().isEmpty()) {
-
-                    project.getDependencies().add(SASS_CONFIGURATION_NAME, "javax.servlet:servlet-api:2.5");
-                    project.getDependencies().add(SASS_CONFIGURATION_NAME, "javax.servlet.jsp:jsp-api:2.1");
-                    project.getDependencies().add(SASS_CONFIGURATION_NAME, "javax.activation:activation:1.1");
-
-                    project.getDependencies().add(SASS_CONFIGURATION_NAME,
-                            liferayPluginExtension.getPortalClasspath());
-                }
-
-                project.getTasks().withType(SassToCss.class, new Action<SassToCss>() {
-                    @Override
-                    public void execute(SassToCss task) {
-                        if (task.getClasspath() == null) {
-                            task.setClasspath(sassConfiguration);
-                        }
-                        if (task.getAppServerPortalDir() == null) {
-                            task.setAppServerPortalDir(liferayPluginExtension.getAppServerPortalDir());
-                        }
-                    }
-                });
-            }
-        });
+        project.getGradle().addBuildListener(new SassToCssTaskDefaultsBuildListener(project));
     }
 
     private void configureSassToCssTask(final Project project) {
         final SassToCss task = project.getTasks().add(SASS_TO_CSS, SassToCss.class);
 
-        project.getGradle().addBuildListener(new BuildAdapter() {
-            @Override
-            public void projectsEvaluated(Gradle gradle) {
-                WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
-
-                if (task.getSassDir() == null) {
-                    task.setSassDir(warConvention.getWebAppDir());
-                }
-            }
-        });
+        project.getGradle().addBuildListener(new SassToCssTaskBuildListener(project, task));
 
         Task warTask = project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
         warTask.dependsOn(task);
     }
 
+    private static class SassToCssTaskDefaultsBuildListener extends BuildAdapter {
+        private final Project project;
+
+        public SassToCssTaskDefaultsBuildListener(Project project) {
+            this.project = project;
+        }
+
+        @Override
+        public void projectsEvaluated(Gradle gradle) {
+
+            final LiferayPluginExtension liferayPluginExtension = project.getExtensions()
+                    .findByType(LiferayPluginExtension.class);
+
+            final Configuration sassConfiguration = project.getConfigurations().getByName("sass");
+
+            if (sassConfiguration.getDependencies().isEmpty()) {
+
+                project.getDependencies().add(SASS_CONFIGURATION_NAME, "javax.servlet:servlet-api:2.5");
+                project.getDependencies().add(SASS_CONFIGURATION_NAME, "javax.servlet.jsp:jsp-api:2.1");
+                project.getDependencies().add(SASS_CONFIGURATION_NAME, "javax.activation:activation:1.1");
+
+                project.getDependencies().add(SASS_CONFIGURATION_NAME,
+                        liferayPluginExtension.getPortalClasspath());
+            }
+
+            project.getTasks().withType(SassToCss.class,
+                    new SetSassToCssTaskDefaultsAction(sassConfiguration, liferayPluginExtension));
+        }
+
+        private static class SetSassToCssTaskDefaultsAction implements Action<SassToCss> {
+            private final Configuration sassConfiguration;
+            private final LiferayPluginExtension liferayPluginExtension;
+
+            public SetSassToCssTaskDefaultsAction(Configuration sassConfiguration,
+                                                  LiferayPluginExtension liferayPluginExtension) {
+                this.sassConfiguration = sassConfiguration;
+                this.liferayPluginExtension = liferayPluginExtension;
+            }
+
+            @Override
+            public void execute(SassToCss task) {
+                if (task.getClasspath() == null) {
+                    task.setClasspath(sassConfiguration);
+                }
+                if (task.getAppServerPortalDir() == null) {
+                    task.setAppServerPortalDir(liferayPluginExtension.getAppServerPortalDir());
+                }
+            }
+        }
+    }
+
+    private static class SassToCssTaskBuildListener extends BuildAdapter {
+        private final Project project;
+        private final SassToCss task;
+
+        public SassToCssTaskBuildListener(Project project, SassToCss task) {
+            this.project = project;
+            this.task = task;
+        }
+
+        @Override
+        public void projectsEvaluated(Gradle gradle) {
+            WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
+
+            if (task.getSassDir() == null) {
+                task.setSassDir(warConvention.getWebAppDir());
+            }
+        }
+    }
 }

@@ -128,7 +128,8 @@ public class LiferayPluginExtension {
         public static JarFilenameFilter getInstance() {
             if (instance == null) {
                 synchronized (JarFilenameFilter.class) {
-                    if (instance == null) {
+                    //  See: http://sourceforge.net/tracker/?func=detail&atid=397078&aid=2843447&group_id=29721
+                    if (instance == null) { // NOSONAR
                         instance = new JarFilenameFilter();
                     }
                 }
