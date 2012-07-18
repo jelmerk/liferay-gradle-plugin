@@ -78,11 +78,11 @@ public class ThemePlugin implements Plugin<Project> {
         project.getGradle().addBuildListener(new MergeTemplateTaskBuildListener(task, themeExtension, warConvention));
     }
 
-    private void configureBuildThumbnailTaskDefaults(final Project project) {
+    private void configureBuildThumbnailTaskDefaults(Project project) {
         project.getGradle().addBuildListener(new BuildThumbnailTaskDefaultsBuildListener(project));
     }
 
-    private void configureBuildThumbnailTask(final Project project) {
+    private void configureBuildThumbnailTask(Project project) {
         final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
         final ThemePluginExtension themeExtension = project.getExtensions().getByType(ThemePluginExtension.class);
 
@@ -200,21 +200,23 @@ public class ThemePlugin implements Plugin<Project> {
         @Override
         public void projectsEvaluated(Gradle gradle) {
 
-            final LiferayPluginExtension liferayExtension = project.getExtensions()
-                    .getByType(LiferayPluginExtension.class);
 
-            project.getTasks().withType(MergeTheme.class, new SetMergeThemeTaskDefaultsAction(liferayExtension));
+
+            project.getTasks().withType(MergeTheme.class, new SetMergeThemeTaskDefaultsAction(project));
         }
 
         private static class SetMergeThemeTaskDefaultsAction implements Action<MergeTheme> {
-            private final LiferayPluginExtension liferayExtension;
+            private final Project project;
 
-            public SetMergeThemeTaskDefaultsAction(LiferayPluginExtension liferayExtension) {
-                this.liferayExtension = liferayExtension;
+            public SetMergeThemeTaskDefaultsAction(Project project) {
+                this.project = project;
             }
 
             @Override
             public void execute(MergeTheme mergeTheme) {
+                LiferayPluginExtension liferayExtension = project.getExtensions()
+                        .getByType(LiferayPluginExtension.class);
+
                 if (mergeTheme.getAppServerPortalDir() == null) {
                     mergeTheme.setAppServerPortalDir(liferayExtension.getAppServerPortalDir());
                 }

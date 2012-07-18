@@ -52,11 +52,11 @@ public class PortletPlugin implements Plugin<Project> {
         configuration.setDescription("The sass configuration");
     }
 
-    private void configureSassToCssTaskDefaults(final Project project) {
+    private void configureSassToCssTaskDefaults(Project project) {
         project.getGradle().addBuildListener(new SassToCssTaskDefaultsBuildListener(project));
     }
 
-    private void configureSassToCssTask(final Project project) {
+    private void configureSassToCssTask(Project project) {
         final SassToCss task = project.getTasks().add(SASS_TO_CSS, SassToCss.class);
 
         project.getGradle().addBuildListener(new SassToCssTaskBuildListener(project, task));

@@ -147,9 +147,9 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         @Override
         public void projectsEvaluated(Gradle gradle) {
 
-            final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
+            WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
 
-            final ServiceBuilderPluginExtension serviceBuilderExtension = project.getExtensions()
+            ServiceBuilderPluginExtension serviceBuilderExtension = project.getExtensions()
                     .getByType(ServiceBuilderPluginExtension.class);
 
             if (task.getPluginName() == null) {
@@ -192,10 +192,10 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         @Override
         public void projectsEvaluated(Gradle gradle) {
 
-            final LiferayPluginExtension liferayExtension = project.getExtensions()
+            LiferayPluginExtension liferayExtension = project.getExtensions()
                     .getByType(LiferayPluginExtension.class);
 
-            final Configuration servicebuilderConfiguration = project.getConfigurations()
+            Configuration servicebuilderConfiguration = project.getConfigurations()
                     .getByName(SERVICE_BUILDER_CONFIGURATION_NAME);
 
             if (servicebuilderConfiguration.getDependencies().isEmpty()) {
