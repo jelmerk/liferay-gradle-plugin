@@ -19,6 +19,8 @@ import org.gradle.api.tasks.TaskExecutionException;
 import java.io.File;
 
 /**
+ * Generates a liferay service (java source files) from a xml service definition file.
+ *
  * @author Jelmer Kuperus
  */
 public class BuildService extends DefaultTask {
@@ -35,6 +37,9 @@ public class BuildService extends DefaultTask {
     private File jalopyInputFile;
     private File serviceInputFile;
 
+    /**
+     * Performs the build service task.
+     */
     @TaskAction
     public void buildService() {
         File workingDir = prepareWorkingDir();

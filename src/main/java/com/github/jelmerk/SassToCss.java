@@ -12,6 +12,8 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.File;
 
 /**
+ * Processes Syntactically Awesome StyleSheets (SASS) files.
+ *
  * @author Jelmer Kuperus
  */
 public class SassToCss extends DefaultTask {
@@ -22,6 +24,9 @@ public class SassToCss extends DefaultTask {
 
     private File sassDir;
 
+    /**
+     * Performs the sassToCss task.
+     */
     @TaskAction
     public void sassToCss() {
 
@@ -54,29 +59,59 @@ public class SassToCss extends DefaultTask {
         javaTask.execute();
     }
 
+    /**
+     * Returns a file pointing to the folder that holds the sass files.
+     *
+     * @return a file pointing to the folder that holds the sass files
+     */
     @InputDirectory
     public File getSassDir() {
         return sassDir;
     }
 
+    /**
+     * Sets the file pointing to the folder that holds the sass files.
+     *
+     * @param sassDir the file pointing to the folder that holds the sass files
+     */
     public void setSassDir(File sassDir) {
         this.sassDir = sassDir;
     }
 
+    /**
+     * Returns a file collection that contains the classes required to run liferay's SassToCssBuilder.
+     *
+     * @return a file collection that contains the classes required to run liferay's SassToCssBuilder
+     */
     @InputFiles
     public FileCollection getClasspath() {
         return classpath;
     }
 
+    /**
+     * Sets the file collection that contains the classes required to run liferay's SassToCssBuilder.
+     *
+     * @param classpath the file collection that contains the classes required to run liferay's SassToCssBuilder
+     */
     public void setClasspath(FileCollection classpath) {
         this.classpath = classpath;
     }
 
+    /**
+     * Returns the appServerPortalDir. A file pointing to the exploded Liferay web application.
+     *
+     * @return a file pointing to the exploded Liferay web application
+     */
     @InputDirectory
     public File getAppServerPortalDir() {
         return appServerPortalDir;
     }
 
+    /**
+     * Sets the appServerPortalDir. A file pointing to the exploded Liferay web application.
+     *
+     * @param appServerPortalDir file pointing to the exploded Liferay web application
+     */
     public void setAppServerPortalDir(File appServerPortalDir) {
         this.appServerPortalDir = appServerPortalDir;
     }

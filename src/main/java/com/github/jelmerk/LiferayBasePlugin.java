@@ -57,19 +57,21 @@ public class LiferayBasePlugin implements Plugin<Project> {
 
         @Override
         public void projectsEvaluated(Gradle gradle) {
-            LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
-            project.getTasks().withType(Deploy.class, new SetDeployTaskDefaultsAction(liferayExtension));
+            project.getTasks().withType(Deploy.class, new SetDeployTaskDefaultsAction(project));
         }
 
         private static class SetDeployTaskDefaultsAction implements Action<Deploy> {
-            private final LiferayPluginExtension liferayExtension;
+            private final Project project;
 
-            public SetDeployTaskDefaultsAction(LiferayPluginExtension liferayExtension) {
-                this.liferayExtension = liferayExtension;
+            public SetDeployTaskDefaultsAction(Project project) {
+                this.project = project;
             }
 
             @Override
             public void execute(Deploy task) {
+                LiferayPluginExtension liferayExtension = project.getExtensions()
+                        .getByType(LiferayPluginExtension.class);
+
                 if (task.getAutoDeployDir() == null) {
                     task.setAutoDeployDir(liferayExtension.getAutoDeployDir());
                 }

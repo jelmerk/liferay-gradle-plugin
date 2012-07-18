@@ -16,6 +16,8 @@ import java.util.Set;
 import static java.util.Arrays.asList;
 
 /**
+ * Extension that holds Liferay specific paths.
+ *
  * @author Jelmer Kuperus
  */
 public class LiferayPluginExtension {
@@ -28,18 +30,39 @@ public class LiferayPluginExtension {
 
     private String autoDeployDirName;
 
+    /**
+     * Constructs a new LiferayPluginExtension.
+     *
+     * @param project the project this extension is registered under
+     */
     public LiferayPluginExtension(Project project) {
         this.project = project;
     }
 
+    /**
+     * Returns the path to the root folder of the application server that Liferay is running in.
+     *
+     * @return the path to the root folder of the application server that Liferay is running in
+     */
     public String getAppServerDirName() {
         return appServerDirName;
     }
 
+    /**
+     * Sets the path to the root folder of the application server that Liferay is running in.
+     * This property is required to be set.
+     *
+     * @param appServerDirName the path to the root folder of the application server that Liferay is running in.
+     */
     public void setAppServerDirName(String appServerDirName) {
         this.appServerDirName = appServerDirName;
     }
 
+    /**
+     * Return the path to the folder that holds the Liferay libraries that are on the global classpath.
+     *
+     * @return the path to the folder that holds the Liferay libraries that are on the global classpath
+     */
     public String getAppServerGlobalLibDirName() {
         if (appServerGlobalLibDirName != null) {
             return appServerGlobalLibDirName;
@@ -49,10 +72,22 @@ public class LiferayPluginExtension {
         return appServerPortalDir.getPath();
     }
 
+    /**
+     * Set the path to the folder that holds the Liferay libraries that are on the global classpath.
+     * If unset this value defaults to $appServerDirName/lib/ext
+     *
+     * @param appServerGlobalLibDirName the path to the folder that holds the Liferay libraries that are on
+     *                                  the global classpath
+     */
     public void setAppServerGlobalLibDirName(String appServerGlobalLibDirName) {
         this.appServerGlobalLibDirName = appServerGlobalLibDirName;
     }
 
+    /**
+     * Returns the path to the exploded Liferay web application.
+     *
+     * @return the path to the exploded Liferay web application
+     */
     public String getAppServerPortalDirName() {
         if (appServerPortalDirName != null) {
             return appServerPortalDirName;
@@ -62,10 +97,21 @@ public class LiferayPluginExtension {
         return appServerPortalDir.getPath();
     }
 
+    /**
+     * Sets the path to the exploded Liferay web application.
+     * If unset this value defaults to $appServerDirName/webapps/ROOT
+     *
+     * @param appServerPortalDirName the path to the exploded Liferay web application
+     */
     public void setAppServerPortalDirName(String appServerPortalDirName) {
         this.appServerPortalDirName = appServerPortalDirName;
     }
 
+    /**
+     * Returns the path to the Liferay auto deploy folder. Plugins placed in this folder will automatically be deployed.
+     *
+     * @return the path to the Liferay auto deploy folder
+     */
     public String getAutoDeployDirName() {
         if (autoDeployDirName != null) {
             return autoDeployDirName;
@@ -75,26 +121,58 @@ public class LiferayPluginExtension {
         return deployDir.getPath();
     }
 
+    /**
+     * Sets the path to the Liferay auto deploy folder. Plugins placed in this folder will automatically be deployed.
+     * If unset this value defaults to $appServerDirName/../deploy
+     *
+     * @param autoDeployDirName the path to the Liferay auto deploy folder
+     */
     public void setAutoDeployDirName(String autoDeployDirName) {
         this.autoDeployDirName = autoDeployDirName;
     }
 
+    /**
+     * Returns a file pointing to the root folder of the application server that Liferay is running in.
+     *
+     * @return a file pointing to the root folder of the application server that Liferay is running in
+     */
     public File getAppServerDir() {
         return project.file(getAppServerDirName());
     }
 
+    /**
+     * Returns a file pointing to the folder that holds the Liferay libraries that are on the global classpath.
+     *
+     * @return a file pointing to the folder that holds the Liferay libraries that are on the global classpath
+     */
     public File getAppServerGlobalLibDir() {
         return project.file(getAppServerGlobalLibDirName());
     }
 
+    /**
+     * Returns a file pointing to the exploded Liferay web application.
+     *
+     * @return a file pointing to the exploded Liferay web application
+     */
     public File getAppServerPortalDir() {
         return project.file(getAppServerPortalDirName());
     }
 
+    /**
+     * Returns a file pointing to the auto deploy folder. Plugins placed in this folder will automatically be deployed.
+     *
+     * @return a file pointing to the auto deploy folder. Plugins placed in this folder will automatically be deployed
+     */
     public File getAutoDeployDir() {
         return project.file(getAutoDeployDirName());
     }
 
+    /**
+     * Returns a file collection that holds all classes on the portal web application's classpath. It includes classes
+     * that are not available to plugins.
+     *
+     * @return a file collection that holds all classes on the portal web application's classpath
+     */
     public FileCollection getPortalClasspath() {
         File portalClassesDir = new File(getAppServerPortalDir(), "WEB-INF/classes");
         File portalLibDir = new File(getAppServerPortalDir(), "WEB-INF/lib");
@@ -112,6 +190,11 @@ public class LiferayPluginExtension {
         return project.files(classPath);
     }
 
+    /**
+     * Configures this class from a groovy closure.
+     *
+     * @param closure the closure that configures this class
+     */
     public void liferay(Closure closure) {
         ConfigureUtil.configure(closure, this);
     }
