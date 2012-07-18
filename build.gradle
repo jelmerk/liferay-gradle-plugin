@@ -73,6 +73,8 @@ configure(install.repositories.mavenInstaller) {
 }
 
 sonar {
+//    profile = 'Sun checkstyle checks'
+
     server {
         url = 'http://localhost:9000'
     }
