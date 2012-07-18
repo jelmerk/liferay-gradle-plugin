@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import static java.util.Arrays.asList;
@@ -121,7 +122,7 @@ public class LiferayPluginExtension {
 
         @Override
         public boolean accept(File dir, String name) {
-            return name != null && name.toLowerCase().endsWith(".jar");
+            return name != null && name.toLowerCase(Locale.getDefault()).endsWith(".jar");
         }
 
         public static JarFilenameFilter getInstance() {

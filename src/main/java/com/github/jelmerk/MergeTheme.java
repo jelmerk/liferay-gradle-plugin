@@ -33,9 +33,11 @@ public class MergeTheme extends DefaultTask {
             copyStyledTheme();
         } else if ("classic".equals(getParentThemeName())) {
             copyClassicTheme();
-        } else  {
-            // TODO : basically we're depending on a theme we created ourself, need to sort out how to do this, since we need to build the theme in that case
         }
+
+        // else  {
+            // TODO : basically we're depending on a theme we created ourself, need to sort out how to do this, since we need to build the theme in that case
+        //}
 
         copyDiffs();
     }

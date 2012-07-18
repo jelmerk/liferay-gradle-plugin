@@ -118,15 +118,12 @@ public class ThemePlugin implements Plugin<Project> {
     }
 
     private void configureBuildThumbnailTask(final Project project) {
-
         final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
         final ThemePluginExtension themeExtension = project.getExtensions().getByType(ThemePluginExtension.class);
 
         Task mergeTask = project.getTasks().getByName(MERGE_THEME);
 
         final BuildThumbnail task = project.getTasks().add(BUILD_THUMBNAIL, BuildThumbnail.class);
-        task.setHeight(120);
-        task.setWidth(160);
 
         project.getGradle().addBuildListener(new BuildAdapter() {
             @Override
@@ -134,12 +131,12 @@ public class ThemePlugin implements Plugin<Project> {
 
                 // only set the default if nothing was changed from say a configuration closure
 
-                if (task.getThumbnailFile() == null) {
-                    task.setThumbnailFile(new File(warConvention.getWebAppDir(), "images/thumbnail.png"));
-                }
-
                 if (task.getOriginalFile() == null) {
                     task.setOriginalFile(new File(themeExtension.getDiffsDir(), "images/screenshot.png"));
+                }
+
+                if (task.getThumbnailFile() == null) {
+                    task.setThumbnailFile(new File(warConvention.getWebAppDir(), "images/thumbnail.png"));
                 }
             }
         });
@@ -148,11 +145,14 @@ public class ThemePlugin implements Plugin<Project> {
         task.onlyIf(new Spec<Task>() {
             @Override
             public boolean isSatisfiedBy(Task element) {
-                return new File(themeExtension.getDiffsDir(), "images/screenshot.png").exists() &&
+                BuildThumbnail castTask = (BuildThumbnail) element; //NOSONAR
+
+                return castTask.getOriginalFile().exists() &&
                         !new File(themeExtension.getDiffsDir(), "images/thumbnail.png").exists();
             }
-        });
 
+
+        });
 
         Task warTask = project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
         warTask.dependsOn(task);

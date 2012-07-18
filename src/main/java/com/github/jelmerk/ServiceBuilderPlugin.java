@@ -4,6 +4,7 @@ import org.gradle.BuildAdapter;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.file.FileCollection;
@@ -13,6 +14,7 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.WarPluginConvention;
+import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -178,6 +180,14 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
                 if (task.getWebappSrcDir() == null) {
                     task.setWebappDir(warConvention.getWebAppDir());
                 }
+            }
+        });
+
+        task.onlyIf(new Spec<Task>() {
+            @Override
+            public boolean isSatisfiedBy(Task element) {
+                BuildService castTask = (BuildService) element; //NOSONAR
+                return castTask.getServiceInputFile().exists();
             }
         });
 

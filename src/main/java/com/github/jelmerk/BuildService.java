@@ -1,8 +1,10 @@
 package com.github.jelmerk;
 
 import org.apache.tools.ant.Project;
-import org.apache.tools.ant.taskdefs.*;
-
+import org.apache.tools.ant.taskdefs.Copy;
+import org.apache.tools.ant.taskdefs.Echo;
+import org.apache.tools.ant.taskdefs.Java;
+import org.apache.tools.ant.taskdefs.Mkdir;
 import org.apache.tools.ant.types.Path;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.FileCollection;
@@ -13,7 +15,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
-
 
 import java.io.File;
 
@@ -162,7 +163,10 @@ public class BuildService extends DefaultTask {
 
         String processOutput = antProject.getProperty("service.test.output");
 
-        System.out.println(processOutput);  // is there some sort of abstraction we should be using ?
+        Echo echo = new Echo();
+        echo.setProject(antProject);
+        echo.setMessage(processOutput);
+        echo.execute();
 
         if (processOutput != null && processOutput.contains("Error")) {
             throw new TaskExecutionException(this, null);

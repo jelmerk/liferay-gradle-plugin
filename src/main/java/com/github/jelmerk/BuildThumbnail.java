@@ -25,9 +25,9 @@ public class BuildThumbnail extends DefaultTask {
 
     private File thumbnailFile;
 
-    private int height = 0;
+    private int height = 120; // NOSONAR
 
-    private int width = 0;
+    private int width = 160; // NOSONAR
 
     private boolean overwrite = true;
 
