@@ -31,10 +31,19 @@ import org.gradle.api.plugins.WarPluginConvention;
  */
 public class PortletPlugin implements Plugin<Project> {
 
-    public static final String SASS_TO_CSS = "sassToCss";
+    /**
+     * The name of the task that processes Syntactically Awesome StyleSheets (SASS) files
+     */
+    public static final String SASS_TO_CSS_TASK_NAME = "sassToCss";
 
-    private static final String SASS_CONFIGURATION_NAME = "sass";
+    /**
+     * The name of the configuration that holds the classes required to run sassToCss
+     */
+    public static final String SASS_CONFIGURATION_NAME = "sass";
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
@@ -57,7 +66,7 @@ public class PortletPlugin implements Plugin<Project> {
     }
 
     private void configureSassToCssTask(Project project) {
-        final SassToCss task = project.getTasks().add(SASS_TO_CSS, SassToCss.class);
+        SassToCss task = project.getTasks().add(SASS_TO_CSS_TASK_NAME, SassToCss.class);
 
         project.getGradle().addBuildListener(new SassToCssTaskBuildListener(project, task));
 

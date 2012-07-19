@@ -33,8 +33,15 @@ import java.io.File;
  */
 public class ThemePlugin implements Plugin<Project> {
 
-    private static final String BUILD_THUMBNAIL = "buildThumbnail";
-    private static final String MERGE_THEME = "mergeTheme";
+    /**
+     * The name of the task that builds the thumbnail out of a larger image.
+     */
+    public static final String BUILD_THUMBNAIL_TASK_NAME = "buildThumbnail";
+
+    /**
+     * The name of the task that merges the parent theme and the diffs
+     */
+    public static final String MERGE_THEME_TASK_NAME = "mergeTheme";
 
     @Override
     public void apply(final Project project) {
@@ -72,7 +79,7 @@ public class ThemePlugin implements Plugin<Project> {
 
         final ThemePluginExtension themeExtension = project.getExtensions().getByType(ThemePluginExtension.class);
 
-        final MergeTheme task = project.getTasks().add(MERGE_THEME, MergeTheme.class);
+        final MergeTheme task = project.getTasks().add(MERGE_THEME_TASK_NAME, MergeTheme.class);
         task.setThemeType(themeExtension.getThemeType());
 
         project.getGradle().addBuildListener(new MergeTemplateTaskBuildListener(task, themeExtension, warConvention));
@@ -86,9 +93,9 @@ public class ThemePlugin implements Plugin<Project> {
         final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
         final ThemePluginExtension themeExtension = project.getExtensions().getByType(ThemePluginExtension.class);
 
-        Task mergeTask = project.getTasks().getByName(MERGE_THEME);
+        Task mergeTask = project.getTasks().getByName(MERGE_THEME_TASK_NAME);
 
-        final BuildThumbnail task = project.getTasks().add(BUILD_THUMBNAIL, BuildThumbnail.class);
+        final BuildThumbnail task = project.getTasks().add(BUILD_THUMBNAIL_TASK_NAME, BuildThumbnail.class);
 
         project.getGradle().addBuildListener(new BuildThumbnailTaskBuildListener(task, themeExtension, warConvention));
         task.dependsOn(mergeTask);
@@ -180,6 +187,10 @@ public class ThemePlugin implements Plugin<Project> {
                 task.setParentThemeName(themeExtension.getParentThemeName());
             }
 
+            if (task.getParentThemeProjectName() == null) {
+                task.setParentThemeProjectName(themeExtension.getParentThemeProjectName());
+            }
+
             if (task.getDiffsDir() == null) {
                 task.setDiffsDir(themeExtension.getDiffsDir());
             }
@@ -199,9 +210,6 @@ public class ThemePlugin implements Plugin<Project> {
 
         @Override
         public void projectsEvaluated(Gradle gradle) {
-
-
-
             project.getTasks().withType(MergeTheme.class, new SetMergeThemeTaskDefaultsAction(project));
         }
 

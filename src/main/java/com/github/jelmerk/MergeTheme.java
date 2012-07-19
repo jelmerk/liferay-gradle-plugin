@@ -16,12 +16,13 @@
 
 package com.github.jelmerk;
 
-import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Copy;
 import org.apache.tools.ant.types.FileSet;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
@@ -33,6 +34,8 @@ public class MergeTheme extends DefaultTask {
 
     private String parentThemeName;
 
+    private String parentThemeProjectName;
+
     private String themeType;
 
     private File appServerPortalDir;
@@ -42,7 +45,20 @@ public class MergeTheme extends DefaultTask {
 
     @TaskAction
     public void mergeTheme() {
+        if (getParentThemeName() != null && getParentThemeProjectName() != null) {
+            throw new InvalidUserDataException("Please specify either parentThemeName or parentThemeProjectName " +
+                    "but not both.");
+        }
+        if (getParentThemeName() != null) {
+            copyLiferayTheme();
+        }
+        if (getParentThemeProjectName() != null) {
+            copyProjectTheme();
+        }
+        copyDiffs();
+    }
 
+    private void copyLiferayTheme() {
         if ("_unstyled".equals(getParentThemeName())) {
             copyUnstyledTheme();
         } else if ("_styled".equals(getParentThemeName())) {
@@ -50,54 +66,27 @@ public class MergeTheme extends DefaultTask {
         } else if ("classic".equals(getParentThemeName())) {
             copyClassicTheme();
         }
+    }
 
-        // else  {
-            // TODO : basically we're depending on a theme we created ourself, need to sort out how to do this, since we need to build the theme in that case
-        //}
+    private void copyProjectTheme() {
+        MergeTheme mergeTask = (MergeTheme) getProject().project(parentThemeProjectName)
+                .getTasks().getByName(ThemePlugin.MERGE_THEME_TASK_NAME);
 
-        copyDiffs();
+        mergeTask.execute(); // TODO does not work
+
+        File parentThemeOutputDir = mergeTask.getOutputDir();
+        copy(parentThemeOutputDir, null, "WEB-INF", getOutputDir());
     }
 
     private void copyDiffs() {
-        Project antProject = getAnt().getProject();
-
-        FileSet mainFileSet = new FileSet();
-        mainFileSet.setDir(getDiffsDir());
-
-        Copy mainCopy = new Copy();
-        mainCopy.setTodir(getOutputDir());
-        mainCopy.setOverwrite(true);
-        mainCopy.add(mainFileSet);
-        mainCopy.setProject(antProject);
-        mainCopy.execute();
+        copy(getDiffsDir(), null, null,  getOutputDir());
     }
 
     private void copyUnstyledTheme() {
 
-        Project antProject = getAnt().getProject();
-
-        FileSet mainFileSet = new FileSet();
-        mainFileSet.setDir(new File(getAppServerPortalDir(), "html/themes/_unstyled"));
-        mainFileSet.setExcludes("templates/**");
-
-        Copy mainCopy = new Copy();
-        mainCopy.setTodir(getOutputDir());
-        mainCopy.setOverwrite(true);
-        mainCopy.add(mainFileSet);
-        mainCopy.setProject(antProject);
-        mainCopy.execute();
-
-        FileSet templatesFileSet = new FileSet();
-        templatesFileSet.setDir(new File(getAppServerPortalDir(), "html/themes/_unstyled/templates"));
-        templatesFileSet.setExcludes("init." + getThemeType());
-        templatesFileSet.setIncludes("*." + getThemeType());
-
-        Copy templatesCopy = new Copy();
-        templatesCopy.setTodir(new File(getOutputDir(), "templates"));
-        templatesCopy.setOverwrite(true);
-        templatesCopy.add(templatesFileSet);
-        templatesCopy.setProject(antProject);
-        templatesCopy.execute();
+        copy(new File(getAppServerPortalDir(), "html/themes/_unstyled"), null, "templates/**", getOutputDir());
+        copy(new File(getAppServerPortalDir(), "html/themes/_unstyled/templates"), "*." + getThemeType(),
+                "init." + getThemeType(), new File(getOutputDir(), "templates"));
 
         /*
             <copy todir="docroot" overwrite="true">
@@ -118,22 +107,8 @@ public class MergeTheme extends DefaultTask {
     }
 
     private void copyStyledTheme() {
-
-
         copyUnstyledTheme();
-
-
-        Project antProject = getAnt().getProject();
-
-        FileSet fileset = new FileSet();
-        fileset.setDir(new File(getAppServerPortalDir(), "html/themes/_styled"));
-
-        Copy copy = new Copy();
-        copy.setTodir(getOutputDir());
-        copy.setOverwrite(true);
-        copy.add(fileset);
-        copy.setProject(antProject);
-        copy.execute();
+        copy(new File(getAppServerPortalDir(), "html/themes/_styled"), null, null, getOutputDir());
 
         /*
             <copy todir="docroot" overwrite="true">
@@ -160,30 +135,11 @@ public class MergeTheme extends DefaultTask {
     }
 
     private void copyClassicTheme() {
+        copy(new File(getAppServerPortalDir(), "html/themes/classic"), null, "_diffs/**,templates/**",
+                getOutputDir());
 
-        Project antProject = getAnt().getProject();
-
-        FileSet mainFileSet = new FileSet();
-        mainFileSet.setDir(new File(getAppServerPortalDir(), "html/themes/classic"));
-        mainFileSet.setExcludes("_diffs/**,templates/**");
-
-        Copy mainCopy = new Copy();
-        mainCopy.setTodir(getOutputDir());
-        mainCopy.setOverwrite(true);
-        mainCopy.add(mainFileSet);
-        mainCopy.setProject(antProject);
-        mainCopy.execute();
-
-        FileSet templatesFileSet = new FileSet();
-        templatesFileSet.setDir(new File(getAppServerPortalDir(), "html/themes/classic/templates"));
-        templatesFileSet.setIncludes("*." + getThemeType());
-
-        Copy templatesCopy = new Copy();
-        templatesCopy.setTodir(new File(getOutputDir(), "templates"));
-        templatesCopy.setOverwrite(true);
-        templatesCopy.add(templatesFileSet);
-        templatesCopy.setProject(antProject);
-        templatesCopy.execute();
+        copy(new File(getAppServerPortalDir(), "html/themes/classic/templates"), "*." + getThemeType(), null,
+                new File(getOutputDir(), "templates"));
 
 
         /*
@@ -204,13 +160,39 @@ public class MergeTheme extends DefaultTask {
     }
 
 
+    private void copy(File dir, String includes, String excludes, File toDir) {
+
+        FileSet fileSet = new FileSet();
+        fileSet.setDir(dir);
+        fileSet.setIncludes(includes);
+        fileSet.setExcludes(excludes);
+
+        Copy copy = new Copy();
+        copy.setTodir(toDir);
+        copy.setOverwrite(true);
+        copy.add(fileSet);
+        copy.setProject(getAnt().getProject());
+        copy.execute();
+    }
+
     @Input
+    @Optional
     public String getParentThemeName() {
         return parentThemeName;
     }
 
     public void setParentThemeName(String parentThemeName) {
         this.parentThemeName = parentThemeName;
+    }
+
+    @Input
+    @Optional
+    public String getParentThemeProjectName() {
+        return parentThemeProjectName;
+    }
+
+    public void setParentThemeProjectName(String parentThemeProjectName) {
+        this.parentThemeProjectName = parentThemeProjectName;
     }
 
     @Input

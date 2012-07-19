@@ -29,6 +29,7 @@ import java.io.File;
 public class ThemePluginExtension {
 
     private String parentThemeName;
+    private String parentThemeProjectName;
     private String themeType = "vm";
 
     private String diffsDirName = "src/main/diffs";
@@ -61,6 +62,25 @@ public class ThemePluginExtension {
      */
     public void setParentThemeName(String parentThemeName) {
         this.parentThemeName = parentThemeName;
+    }
+
+    /**
+     * Returns the name of the parent project theme this theme extends from.
+     *
+     * @return the name of the parent project theme this theme extends from
+     */
+    public String getParentThemeProjectName() {
+        return parentThemeProjectName;
+    }
+
+    /**
+     * Sets the name of the parent project theme this theme extends from. It should use the Gradle way of referencing a
+     * project.
+     *
+     * @param parentThemeProjectName the name of the parent project theme this theme extends from
+     */
+    public void setParentThemeProjectName(String parentThemeProjectName) {
+        this.parentThemeProjectName = parentThemeProjectName;
     }
 
     /**
