@@ -29,6 +29,9 @@ import org.gradle.api.specs.Spec;
 import java.io.File;
 
 /**
+ * Plugin that makes it easy to develop themes for liferay.
+ * When you configure this plugin {@link LiferayBasePlugin} is configured as well
+ *
  * @author Jelmer Kuperus
  */
 public class ThemePlugin implements Plugin<Project> {
@@ -43,6 +46,9 @@ public class ThemePlugin implements Plugin<Project> {
      */
     public static final String MERGE_THEME_TASK_NAME = "mergeTheme";
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void apply(final Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);

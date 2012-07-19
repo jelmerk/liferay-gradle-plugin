@@ -27,6 +27,9 @@ import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.plugins.WarPluginConvention;
 
 /**
+ * Plugin that makes it easy to develop portlets for Liferay.
+ * When you configure this plugin {@link LiferayBasePlugin} is configured as well
+ *
  * @author Jelmer Kuperus
  */
 public class PortletPlugin implements Plugin<Project> {

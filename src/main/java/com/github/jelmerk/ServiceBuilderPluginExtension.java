@@ -52,7 +52,7 @@ public class ServiceBuilderPluginExtension {
     }
 
     /**
-     * Returns the path to the jalopy file. This file is used to control the formatter that formats the generated code.
+     * Returns the path to the jalopy file. This file configures the formatter that formats the generated code.
      *
      * @return the path to the jalopy file
      */
@@ -61,7 +61,7 @@ public class ServiceBuilderPluginExtension {
     }
 
     /**
-     * Sets the path to the jalopy file. This file is used to control the formatter that formats the generated code.
+     * Sets the path to the jalopy file. This file configures the formatter that formats the generated code.
      *
      * @param jalopyInputFileName the path to the jalopy file
      */
@@ -70,7 +70,7 @@ public class ServiceBuilderPluginExtension {
     }
 
     /**
-     * Returns the path to the service input file. This file used to declare the entity for which a service
+     * Returns the path to the service input file. This file declares the entity for which a service
      * is generated.
      *
      * @return the path to the service input file
@@ -85,7 +85,7 @@ public class ServiceBuilderPluginExtension {
     }
 
     /**
-     * Sets the path to the service input file. This file used to declare the entity for which a service
+     * Sets the path to the service input file. This file declares the entity for which a service
      * is generated. If unset this value defaults to $webappdir/WEB-INF/service.xml
      *
      * @param serviceInputFileName the path to the service input file

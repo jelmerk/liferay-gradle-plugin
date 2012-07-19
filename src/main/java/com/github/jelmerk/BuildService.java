@@ -225,75 +225,168 @@ public class BuildService extends DefaultTask {
         echo.execute();
     }
 
+    /**
+     * Returns the plugin name.
+     *
+     * @return the plugin name
+     */
     @Input
     public String getPluginName() {
         return pluginName;
     }
 
+    /**
+     * Sets the plugin name.
+     *
+     * @param pluginName the plugin name
+     */
     public void setPluginName(String pluginName) {
         this.pluginName = pluginName;
     }
 
+    /**
+     * Returns a file that points to the service input file. This declares the entity for which a service
+     * is generated.
+     *
+     * @return the file that points to the service input file
+     */
     @InputFile
     public File getServiceInputFile() {
         return serviceInputFile;
     }
 
+    /**
+     * Sets the file that points to the service input file. This file declares the entity for which a service
+     * is generated. This property is required.
+     *
+     * @param serviceInputFile the path to the service input file
+     */
     public void setServiceInputFile(File serviceInputFile) {
         this.serviceInputFile = serviceInputFile;
     }
 
+    /**
+     * Returns the file that points to the jalopy file. This file configures the formatter that formats the
+     * generated code.
+     *
+     * @return the file that points to the jalopy file
+     */
     @Optional
     @InputFile
     public File getJalopyInputFile() {
         return jalopyInputFile;
     }
 
+    /**
+     * Sets the file that points to the jalopy file. This file configures the formatter that formats the generated code.
+     *
+     * @param jalopyInputFile file that points to the jalopy file
+     */
     public void setJalopyInputFile(File jalopyInputFile) {
         this.jalopyInputFile = jalopyInputFile;
     }
 
+
+    /**
+     * Returns the file that points to the directory where the generated service implementation source files will be
+     * written to.
+     *
+     * @return the file that points to the directory where the generated service implementation source files will be
+     *         written to
+     */
     @OutputDirectory
     public File getImplSrcDir() {
         return implSrcDir;
     }
 
+    /**
+     * Sets the file that points to the directory where the generated service implementation source files will be
+     * written to. This property is required.
+     *
+     * @param implSrcDir file that points to the directory where the generated service implementation source files
+     *                   will be written to.
+     */
     public void setImplSrcDir(File implSrcDir) {
         this.implSrcDir = implSrcDir;
     }
 
+    /**
+     * Returns the file that points to the directory where the generated service api source files will be written to.
+     *
+     * @return the file that points to the directory where the generated service api source files will be written to
+     */
     @OutputDirectory
     public File getApiSrcDir() {
         return apiSrcDir;
     }
 
+    /**
+     * Sets the file that points to the directory where the generated service api source files will be written to.
+     * This property is required.
+     *
+     * @param apiSrcDir file that points to the directory where the generated service api source files will be
+     *                  written to.
+     */
     public void setApiSrcDir(File apiSrcDir) {
         this.apiSrcDir = apiSrcDir;
     }
 
+    /**
+     * Returns the file that points to the directory where the generated resource files
+     * (hibernate mappings / application contexts etc) will be written to.
+     *
+     * @return the file that points to the directory where the generated resource files will be written to
+     */
     @OutputDirectory
     public File getResourceDir() {
         return resourceDir;
     }
 
+    /**
+     * Sets the file that points to the directory where the generated resource files
+     * (hibernate mappings / application contexts etc) will be written to. This property is required.
+     *
+     * @param resourceDir file that points to the directory where the generated resource files will be written to
+     */
     public void setResourceDir(File resourceDir) {
         this.resourceDir = resourceDir;
     }
 
+    /**
+     * Returns the web application directory where generated sql files etc will be written to.
+     *
+     * @return the web application directory where generated sql files etc will be written to
+     */
     @OutputDirectory
     public File getWebappSrcDir() {
         return webappSrcDir;
     }
 
+    /**
+     * Sets the web application directory where generated sql files etc will be written to.
+     *
+     * @param webappSrcDir the web application directory where generated sql files etc will be written to
+     */
     public void setWebappDir(File webappSrcDir) {
         this.webappSrcDir = webappSrcDir;
     }
 
+    /**
+     * Returns the file collection that contains the classes required to run liferay's ServiceBuilder.
+     *
+     * @return the file collection that contains the classes required to run liferay's ServiceBuilder
+     */
     @InputFiles
     public FileCollection getClasspath() {
         return classpath;
     }
 
+    /**
+     * Sets the file collection that contains the classes required to run liferay's ServiceBuilder.
+     * This property is required.
+     *
+     * @param classpath the file collection that contains the classes required to run liferay's ServiceBuilder
+     */
     public void setClasspath(FileCollection classpath) {
         this.classpath = classpath;
     }

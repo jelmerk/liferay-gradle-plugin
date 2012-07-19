@@ -20,10 +20,16 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 /**
+ * Plugin that makes it easy to develop hooks for Liferay.
+ * When you configure this plugin {@link LiferayBasePlugin} is configured as well
+ *
  * @author Jelmer Kuperus
  */
 public class HookPlugin implements Plugin<Project> {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
