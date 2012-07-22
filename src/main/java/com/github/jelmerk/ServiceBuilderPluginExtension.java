@@ -83,7 +83,7 @@ public class ServiceBuilderPluginExtension {
 
     /**
      * Sets the path to the service input file. This file declares the entity for which a service
-     * is generated. If unset this value defaults to $webappdir/WEB-INF/service.xml
+     * is generated. If unset this value defaults to service.xml
      *
      * @param serviceInputFileName the path to the service input file
      */
