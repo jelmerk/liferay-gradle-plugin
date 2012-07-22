@@ -19,7 +19,6 @@ package com.github.jelmerk;
 import groovy.lang.Closure;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.plugins.WarPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.util.ConfigureUtil;
@@ -79,9 +78,7 @@ public class ServiceBuilderPluginExtension {
         if (serviceInputFileName != null) {
             return serviceInputFileName;
         }
-        // TODO : change this to resources or the project root? I know this is what liferay uses but you really don't want to ship your source files
-        WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
-        return new File(warConvention.getWebAppDir(), "WEB-INF/service.xml").getPath();
+        return new File("service.xml").getPath();
     }
 
     /**
