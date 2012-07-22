@@ -29,6 +29,10 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.File;
 
 /**
+ * Merges a parent theme and the diffs defined in a theme plugin. When creating a theme in Liferay you usually extend
+ * from a parent theme and overwrite only certain files in the childs (the diff)
+ *
+ * @author Jelmer Kuperus
  */
 public class MergeTheme extends DefaultTask {
 
@@ -43,6 +47,9 @@ public class MergeTheme extends DefaultTask {
     private File diffsDir;
     private File outputDir;
 
+    /**
+     * Performs the merge theme task.
+     */
     @TaskAction
     public void mergeTheme() {
         if (getParentThemeName() != null && getParentThemeProjectName() != null) {

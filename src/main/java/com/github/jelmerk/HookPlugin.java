@@ -20,7 +20,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 /**
- * Plugin that makes it easy to develop hooks for Liferay.
+ * Implementation of {@link Plugin} that adds tasks and configuration for creating Liferay hooks.
  * When you configure this plugin {@link LiferayBasePlugin} is configured as well
  *
  * @author Jelmer Kuperus

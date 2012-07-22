@@ -29,7 +29,7 @@ import org.gradle.api.specs.Spec;
 import java.io.File;
 
 /**
- * Plugin that makes it easy to develop themes for liferay.
+ * Implementation of {@link Plugin} that adds tasks and configuration for creating Liferay themes.
  * When you configure this plugin {@link LiferayBasePlugin} is configured as well
  *
  * @author Jelmer Kuperus
@@ -42,15 +42,20 @@ public class ThemePlugin implements Plugin<Project> {
     public static final String BUILD_THUMBNAIL_TASK_NAME = "buildThumbnail";
 
     /**
-     * The name of the task that merges the parent theme and the diffs
+     * The name of the task that merges the parent theme and the diffs.
      */
     public static final String MERGE_THEME_TASK_NAME = "mergeTheme";
+
+    /**
+     * The name of the theme extension.
+     */
+    public static final String THEME_EXTENSION_NAME = "theme";
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void apply(final Project project) {
+    public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
 
         createThemeExtension(project);
@@ -64,28 +69,26 @@ public class ThemePlugin implements Plugin<Project> {
         configureBuildThumbnailTask(project);
     }
 
-
     private void configureWar(Project project) {
         WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
         warConvention.setWebAppDirName(new File(project.getBuildDir(), "webapp").getAbsolutePath());
     }
 
     private void createThemeExtension(Project project) {
-        project.getExtensions().create("theme", ThemePluginExtension.class, project);
+        project.getExtensions().create(THEME_EXTENSION_NAME, ThemePluginExtension.class, project);
     }
 
-
-    private void configureMergeTemplateTaskDefaults(final Project project) {
+    private void configureMergeTemplateTaskDefaults(Project project) {
         project.getGradle().addBuildListener(new MergeTemplateTaskDefaultsBuildListener(project));
     }
 
     private void configureMergeTemplateTask(Project project) {
 
-        final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
+        WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
 
-        final ThemePluginExtension themeExtension = project.getExtensions().getByType(ThemePluginExtension.class);
+        ThemePluginExtension themeExtension = project.getExtensions().getByType(ThemePluginExtension.class);
 
-        final MergeTheme task = project.getTasks().add(MERGE_THEME_TASK_NAME, MergeTheme.class);
+        MergeTheme task = project.getTasks().add(MERGE_THEME_TASK_NAME, MergeTheme.class);
         task.setThemeType(themeExtension.getThemeType());
 
         project.getGradle().addBuildListener(new MergeTemplateTaskBuildListener(task, themeExtension, warConvention));
@@ -96,12 +99,12 @@ public class ThemePlugin implements Plugin<Project> {
     }
 
     private void configureBuildThumbnailTask(Project project) {
-        final WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
-        final ThemePluginExtension themeExtension = project.getExtensions().getByType(ThemePluginExtension.class);
+        WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
+        ThemePluginExtension themeExtension = project.getExtensions().getByType(ThemePluginExtension.class);
 
         Task mergeTask = project.getTasks().getByName(MERGE_THEME_TASK_NAME);
 
-        final BuildThumbnail task = project.getTasks().add(BUILD_THUMBNAIL_TASK_NAME, BuildThumbnail.class);
+        BuildThumbnail task = project.getTasks().add(BUILD_THUMBNAIL_TASK_NAME, BuildThumbnail.class);
 
         project.getGradle().addBuildListener(new BuildThumbnailTaskBuildListener(task, themeExtension, warConvention));
         task.dependsOn(mergeTask);
@@ -112,14 +115,14 @@ public class ThemePlugin implements Plugin<Project> {
         warTask.dependsOn(task);
     }
 
-    private static class BuildThumbnailTaskBuildListener extends BuildAdapter {
+    private static final class BuildThumbnailTaskBuildListener extends BuildAdapter {
         private final BuildThumbnail task;
         private final ThemePluginExtension themeExtension;
         private final WarPluginConvention warConvention;
 
-        public BuildThumbnailTaskBuildListener(BuildThumbnail task,
-                                               ThemePluginExtension themeExtension,
-                                               WarPluginConvention warConvention) {
+        private BuildThumbnailTaskBuildListener(BuildThumbnail task,
+                                                ThemePluginExtension themeExtension,
+                                                WarPluginConvention warConvention) {
             this.task = task;
             this.themeExtension = themeExtension;
             this.warConvention = warConvention;
@@ -140,10 +143,10 @@ public class ThemePlugin implements Plugin<Project> {
         }
     }
 
-    private static class BuildThumbnailTaskDefaultsBuildListener extends BuildAdapter {
+    private static final class BuildThumbnailTaskDefaultsBuildListener extends BuildAdapter {
         private final Project project;
 
-        public BuildThumbnailTaskDefaultsBuildListener(Project project) {
+        private BuildThumbnailTaskDefaultsBuildListener(Project project) {
             this.project = project;
         }
 
@@ -153,10 +156,10 @@ public class ThemePlugin implements Plugin<Project> {
             project.getTasks().withType(BuildThumbnail.class, new SetBuildThumbnailDefaultsAction(liferayExtension));
         }
 
-        private static class SetBuildThumbnailDefaultsAction implements Action<BuildThumbnail> {
+        private static final class SetBuildThumbnailDefaultsAction implements Action<BuildThumbnail> {
             private final LiferayPluginExtension liferayExtension;
 
-            public SetBuildThumbnailDefaultsAction(LiferayPluginExtension liferayExtension) {
+            private SetBuildThumbnailDefaultsAction(LiferayPluginExtension liferayExtension) {
                 this.liferayExtension = liferayExtension;
             }
 
@@ -169,14 +172,14 @@ public class ThemePlugin implements Plugin<Project> {
         }
     }
 
-    private static class MergeTemplateTaskBuildListener extends BuildAdapter {
+    private static final class MergeTemplateTaskBuildListener extends BuildAdapter {
         private final MergeTheme task;
         private final ThemePluginExtension themeExtension;
         private final WarPluginConvention warConvention;
 
-        public MergeTemplateTaskBuildListener(MergeTheme task,
-                                              ThemePluginExtension themeExtension,
-                                              WarPluginConvention warConvention) {
+        private MergeTemplateTaskBuildListener(MergeTheme task,
+                                               ThemePluginExtension themeExtension,
+                                               WarPluginConvention warConvention) {
             this.task = task;
             this.themeExtension = themeExtension;
             this.warConvention = warConvention;
@@ -184,7 +187,6 @@ public class ThemePlugin implements Plugin<Project> {
 
         @Override
         public void projectsEvaluated(Gradle gradle) {
-
             if (task.getThemeType() == null) {
                 task.setThemeType(themeExtension.getThemeType());
             }
@@ -207,10 +209,10 @@ public class ThemePlugin implements Plugin<Project> {
         }
     }
 
-    private static class MergeTemplateTaskDefaultsBuildListener extends BuildAdapter {
+    private static final class MergeTemplateTaskDefaultsBuildListener extends BuildAdapter {
         private final Project project;
 
-        public MergeTemplateTaskDefaultsBuildListener(Project project) {
+        private MergeTemplateTaskDefaultsBuildListener(Project project) {
             this.project = project;
         }
 
@@ -219,10 +221,10 @@ public class ThemePlugin implements Plugin<Project> {
             project.getTasks().withType(MergeTheme.class, new SetMergeThemeTaskDefaultsAction(project));
         }
 
-        private static class SetMergeThemeTaskDefaultsAction implements Action<MergeTheme> {
+        private static final class SetMergeThemeTaskDefaultsAction implements Action<MergeTheme> {
             private final Project project;
 
-            public SetMergeThemeTaskDefaultsAction(Project project) {
+            private SetMergeThemeTaskDefaultsAction(Project project) {
                 this.project = project;
             }
 
@@ -238,10 +240,10 @@ public class ThemePlugin implements Plugin<Project> {
         }
     }
 
-    private static class ThumbnailTaskOnlyIfSpec implements Spec<Task> {
+    private static final class ThumbnailTaskOnlyIfSpec implements Spec<Task> {
         private final ThemePluginExtension themeExtension;
 
-        public ThumbnailTaskOnlyIfSpec(ThemePluginExtension themeExtension) {
+        private ThumbnailTaskOnlyIfSpec(ThemePluginExtension themeExtension) {
             this.themeExtension = themeExtension;
         }
 

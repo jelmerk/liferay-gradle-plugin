@@ -19,17 +19,15 @@ package com.github.jelmerk;
 import groovy.lang.Closure;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.initialization.dsl.ScriptHandler;
 import org.gradle.util.ConfigureUtil;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
-import static java.util.Arrays.asList;
+import java.util.Map;
 
 /**
  * Extension that holds Liferay specific paths.
@@ -193,15 +191,14 @@ public class LiferayPluginExtension {
         File portalClassesDir = new File(getAppServerPortalDir(), "WEB-INF/classes");
         File portalLibDir = new File(getAppServerPortalDir(), "WEB-INF/lib");
 
-        Set<File> pluginClasspath = project.getBuildscript().getConfigurations()
-                .getByName(ScriptHandler.CLASSPATH_CONFIGURATION).resolve();
+        FileCollection pluginClasspath = project.getBuildscript().getConfigurations()
+                .getByName(ScriptHandler.CLASSPATH_CONFIGURATION);
 
-
-        List<File> classPath = new ArrayList<File>();
+        List<Object> classPath = new ArrayList<Object>();
         classPath.add(portalClassesDir);
-        classPath.addAll(asList(portalLibDir.listFiles(JarFilenameFilter.getInstance())));
-        classPath.addAll(asList(getAppServerGlobalLibDir().listFiles(JarFilenameFilter.getInstance())));
-        classPath.addAll(pluginClasspath);
+        classPath.add(newFileTree(portalLibDir, "*.jar"));
+        classPath.add(newFileTree(getAppServerGlobalLibDir(), "*.jar"));
+        classPath.add(pluginClasspath);
 
         return project.files(classPath);
     }
@@ -215,27 +212,10 @@ public class LiferayPluginExtension {
         ConfigureUtil.configure(closure, this);
     }
 
-    static class JarFilenameFilter implements FilenameFilter {
-
-        private static volatile JarFilenameFilter instance;
-
-        @Override
-        public boolean accept(File dir, String name) {
-            return name != null && name.toLowerCase(Locale.getDefault()).endsWith(".jar");
-        }
-
-        public static JarFilenameFilter getInstance() {
-            if (instance == null) {
-                synchronized (JarFilenameFilter.class) {
-                    //  See: http://sourceforge.net/tracker/?func=detail&atid=397078&aid=2843447&group_id=29721
-                    if (instance == null) { // NOSONAR
-                        instance = new JarFilenameFilter();
-                    }
-                }
-            }
-            return instance;
-        }
+    private FileTree newFileTree(File dir, String include) {
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("dir", dir);
+        args.put("include", include);
+        return project.fileTree(args);
     }
-
-
 }

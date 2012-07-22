@@ -25,13 +25,29 @@ import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.tasks.bundling.War;
 
 /**
+ * Implementation of {@link Plugin} that registers the liferay extension and allows you to hot deploy plugins to
+ * Liferay. Most of the time you should not add this plugin directly and you should use the Gradle plugin appropriate
+ * to the Liferay plugin you are developing.
+ *
  * @author Jelmer Kuperus
  */
 public class LiferayBasePlugin implements Plugin<Project> {
 
-    public static final String LIFERAY_GROUP = "liferay";
+    /**
+     * The name of the Liferay extension.
+     */
+    public static final String LIFERAY_EXTENSION_NAME = "liferay";
 
-    public static final String DEPLOY = "deploy";
+    /**
+     * The name of the group Liferay specific tasks will be grouped under.
+     * (eg the heading you see when you run gradle tasks)
+     */
+    public static final String LIFERAY_GROUP_NAME = "liferay";
+
+    /**
+     * The name of the task that deploys your plugin to Liferay.
+     */
+    public static final String DEPLOY_TASK_NAME = "deploy";
 
     /**
      * {@inheritDoc}
@@ -46,28 +62,28 @@ public class LiferayBasePlugin implements Plugin<Project> {
     }
 
     private void createLiferayExtension(Project project) {
-        project.getExtensions().create("liferay", LiferayPluginExtension.class, project);
+        project.getExtensions().create(LIFERAY_EXTENSION_NAME, LiferayPluginExtension.class, project);
     }
 
-    private void configureDeployTaskDefaults(final Project project) {
+    private void configureDeployTaskDefaults(Project project) {
         project.getGradle().addBuildListener(new DeployTaskDefaultsBuildListener(project));
     }
 
     private void configureDeployTask(Project project) {
         War warTask = (War) project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
 
-        Deploy deploy = project.getTasks().add(DEPLOY, Deploy.class);
+        Deploy deploy = project.getTasks().add(DEPLOY_TASK_NAME, Deploy.class);
         deploy.setDescription("Deploys the plugin");
-        deploy.setGroup(LiferayBasePlugin.LIFERAY_GROUP);
+        deploy.setGroup(LiferayBasePlugin.LIFERAY_GROUP_NAME);
 
         project.getGradle().addBuildListener(new DeployTaskBuildListener(deploy, warTask));
         deploy.dependsOn(warTask);
     }
 
-    private static class DeployTaskDefaultsBuildListener extends BuildAdapter {
+    private static final class DeployTaskDefaultsBuildListener extends BuildAdapter {
         private final Project project;
 
-        public DeployTaskDefaultsBuildListener(Project project) {
+        private DeployTaskDefaultsBuildListener(Project project) {
             this.project = project;
         }
 
@@ -76,10 +92,10 @@ public class LiferayBasePlugin implements Plugin<Project> {
             project.getTasks().withType(Deploy.class, new SetDeployTaskDefaultsAction(project));
         }
 
-        private static class SetDeployTaskDefaultsAction implements Action<Deploy> {
+        private static final class SetDeployTaskDefaultsAction implements Action<Deploy> {
             private final Project project;
 
-            public SetDeployTaskDefaultsAction(Project project) {
+            private SetDeployTaskDefaultsAction(Project project) {
                 this.project = project;
             }
 
@@ -95,11 +111,11 @@ public class LiferayBasePlugin implements Plugin<Project> {
         }
     }
 
-    private static class DeployTaskBuildListener extends BuildAdapter {
+    private static final class DeployTaskBuildListener extends BuildAdapter {
         private final Deploy deploy;
         private final War warTask;
 
-        public DeployTaskBuildListener(Deploy deploy, War warTask) {
+        private DeployTaskBuildListener(Deploy deploy, War warTask) {
             this.deploy = deploy;
             this.warTask = warTask;
         }

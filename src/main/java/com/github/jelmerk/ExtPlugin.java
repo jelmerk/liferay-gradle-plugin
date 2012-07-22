@@ -20,10 +20,16 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 /**
+ * Implementation of {@link Plugin} that adds tasks and configuration for creating Liferay ext plugins.
+ * When you configure this plugin {@link LiferayBasePlugin} is configured as well
+ *
  * @author Jelmer Kuperus
  */
 public class ExtPlugin implements Plugin<Project> {
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void apply(Project target) {
 

@@ -20,7 +20,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 /**
- * Plugin that makes it easy to develop layouts for Liferay.
+ * Implementation of {@link Plugin} that adds tasks and configuration for creating Liferay layouts.
  * When you configure this plugin {@link LiferayBasePlugin} is configured as well
  *
  * @author Jelmer Kuperus

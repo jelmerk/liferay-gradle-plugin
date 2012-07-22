@@ -27,20 +27,20 @@ import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.plugins.WarPluginConvention;
 
 /**
- * Plugin that makes it easy to develop portlets for Liferay.
- * When you configure this plugin {@link LiferayBasePlugin} is configured as well
+ * Implementation of {@link Plugin} that adds tasks and configuration for creating Liferay portlets.
+ * When you configure this plugin {@link LiferayBasePlugin} is configured as well.
  *
  * @author Jelmer Kuperus
  */
 public class PortletPlugin implements Plugin<Project> {
 
     /**
-     * The name of the task that processes Syntactically Awesome StyleSheets (SASS) files
+     * The name of the task that processes Syntactically Awesome StyleSheets (SASS) files.
      */
     public static final String SASS_TO_CSS_TASK_NAME = "sassToCss";
 
     /**
-     * The name of the configuration that holds the classes required to run sassToCss
+     * The name of the configuration that holds the classes required to run sassToCss.
      */
     public static final String SASS_CONFIGURATION_NAME = "sass";
 
@@ -77,10 +77,10 @@ public class PortletPlugin implements Plugin<Project> {
         warTask.dependsOn(task);
     }
 
-    private static class SassToCssTaskDefaultsBuildListener extends BuildAdapter {
+    private static final class SassToCssTaskDefaultsBuildListener extends BuildAdapter {
         private final Project project;
 
-        public SassToCssTaskDefaultsBuildListener(Project project) {
+        private SassToCssTaskDefaultsBuildListener(Project project) {
             this.project = project;
         }
 
@@ -106,12 +106,12 @@ public class PortletPlugin implements Plugin<Project> {
                     new SetSassToCssTaskDefaultsAction(sassConfiguration, liferayPluginExtension));
         }
 
-        private static class SetSassToCssTaskDefaultsAction implements Action<SassToCss> {
+        private static final class SetSassToCssTaskDefaultsAction implements Action<SassToCss> {
             private final Configuration sassConfiguration;
             private final LiferayPluginExtension liferayPluginExtension;
 
-            public SetSassToCssTaskDefaultsAction(Configuration sassConfiguration,
-                                                  LiferayPluginExtension liferayPluginExtension) {
+            private SetSassToCssTaskDefaultsAction(Configuration sassConfiguration,
+                                                   LiferayPluginExtension liferayPluginExtension) {
                 this.sassConfiguration = sassConfiguration;
                 this.liferayPluginExtension = liferayPluginExtension;
             }
@@ -128,11 +128,11 @@ public class PortletPlugin implements Plugin<Project> {
         }
     }
 
-    private static class SassToCssTaskBuildListener extends BuildAdapter {
+    private static final class SassToCssTaskBuildListener extends BuildAdapter {
         private final Project project;
         private final SassToCss task;
 
-        public SassToCssTaskBuildListener(Project project, SassToCss task) {
+        private SassToCssTaskBuildListener(Project project, SassToCss task) {
             this.project = project;
             this.task = task;
         }

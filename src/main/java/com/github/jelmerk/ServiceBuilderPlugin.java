@@ -38,6 +38,11 @@ import org.gradle.api.tasks.javadoc.Javadoc;
 import java.io.File;
 
 /**
+ * Implementation of {@link Plugin} that adds tasks and configuration for generating services using
+ * <a href="http://www.liferay.com/community/wiki/-/wiki/Main/Service+Builder">Liferay servicebuilder</a>.
+ * It is implemented as a separate plugin so it can be added to both hooks and portlets
+ * When you configure this plugin {@link LiferayBasePlugin} is configured as well.
+ *
  * @author Jelmer Kuperus
  */
 public class ServiceBuilderPlugin implements Plugin<Project> {
@@ -74,6 +79,11 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     public static final String SERVICE_CONFIGURATION_NAME = "service";
 
     /**
+     * The name of the servicebuilder extension.
+     */
+    public static final String SERVICEBUILDER_EXTENSION_NAME = "servicebuilder";
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -93,7 +103,6 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     }
 
     private void configureConfigurations(Project project) {
-
         Configuration serviceBuilderConfiguration = project.getConfigurations().add(SERVICE_BUILDER_CONFIGURATION_NAME);
         serviceBuilderConfiguration.setVisible(false);
         serviceBuilderConfiguration.setDescription("The servicebuilder configuration");
@@ -103,7 +112,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     }
 
     private void createServiceBuilderExtension(Project project) {
-        project.getExtensions().create("servicebuilder", ServiceBuilderPluginExtension.class, project);
+        project.getExtensions().create(SERVICEBUILDER_EXTENSION_NAME, ServiceBuilderPluginExtension.class, project);
     }
 
     private void configureSourceSets(Project project) {
@@ -126,19 +135,19 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     }
 
 
-    private void configureBuildServiceTaskDefaults(final Project project) {
+    private void configureBuildServiceTaskDefaults(Project project) {
         project.getGradle().addBuildListener(new BuildServiceTaskDefaultsBuildListener(project));
     }
 
-    private void configureBuildServiceTask(final Project project) {
-        final BuildService task = project.getTasks().add(GENERATE_SERVICE_TASK_NAME, BuildService.class);
+    private void configureBuildServiceTask(Project project) {
+        BuildService task = project.getTasks().add(GENERATE_SERVICE_TASK_NAME, BuildService.class);
 
         project.getGradle().addBuildListener(new BuildServiceTaskBuildListener(project, task));
 
         task.onlyIf(new BuildServiceTaskOnlyIfSpec());
 
         task.setDescription("Builds a liferay service");
-        task.setGroup(LiferayBasePlugin.LIFERAY_GROUP);
+        task.setGroup(LiferayBasePlugin.LIFERAY_GROUP_NAME);
     }
 
     private void configureServiceJavaDoc(Project project) {
@@ -156,12 +165,11 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         mainJavadoc.dependsOn(serviceJavadoc);
     }
 
-
-    private static class BuildServiceTaskBuildListener extends BuildAdapter {
+    private static final class BuildServiceTaskBuildListener extends BuildAdapter {
         private final Project project;
         private final BuildService task;
 
-        public BuildServiceTaskBuildListener(Project project, BuildService task) {
+        private BuildServiceTaskBuildListener(Project project, BuildService task) {
             this.project = project;
             this.task = task;
         }
@@ -204,10 +212,10 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         }
     }
 
-    private static class BuildServiceTaskDefaultsBuildListener extends BuildAdapter {
+    private static final class BuildServiceTaskDefaultsBuildListener extends BuildAdapter {
         private final Project project;
 
-        public BuildServiceTaskDefaultsBuildListener(Project project) {
+        private BuildServiceTaskDefaultsBuildListener(Project project) {
             this.project = project;
         }
 
@@ -253,11 +261,11 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
                     new SetBuildServiceTaskDefaultsAction(servicebuilderConfiguration));
         }
 
-        private static class SetBuildServiceTaskDefaultsAction implements Action<BuildService> {
+        private static final class SetBuildServiceTaskDefaultsAction implements Action<BuildService> {
 
             private final Configuration servicebuilderConfiguration;
 
-            public SetBuildServiceTaskDefaultsAction(Configuration servicebuilderConfiguration) {
+            private SetBuildServiceTaskDefaultsAction(Configuration servicebuilderConfiguration) {
                 this.servicebuilderConfiguration = servicebuilderConfiguration;
             }
 
@@ -270,7 +278,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         }
     }
 
-    private static class BuildServiceTaskOnlyIfSpec implements Spec<Task> {
+    private static final class BuildServiceTaskOnlyIfSpec implements Spec<Task> {
         @Override
         public boolean isSatisfiedBy(Task element) {
             BuildService castTask = (BuildService) element; //NOSONAR

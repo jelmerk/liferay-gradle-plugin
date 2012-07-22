@@ -95,9 +95,9 @@ public class ServiceBuilderPluginExtension {
     }
 
     /**
-     * Returns the path to the directory where the service implementation source files will be written to.
+     * Returns the path to the folder where the service implementation source files will be written to.
      *
-     * @return the path to the directory where the service implementation source files will be written to
+     * @return the path to the folder where the service implementation source files will be written to
      */
     public String getImplSrcDirName() {
         if (implSrcDirName != null) {
@@ -108,15 +108,20 @@ public class ServiceBuilderPluginExtension {
     }
 
     /**
-     * Sets the path to the directory where the service implementation source files will be written to.
-     * If unset this value defaults to
+     * Sets the path to the folder where the service implementation source files will be written to.
+     * If unset this value defaults to the first source folder in the main sourceset
      *
-     * @param implSrcDirName the path to the directory where the service implementation source files will be written to.
+     * @param implSrcDirName the path to the folder where the service implementation source files will be written to.
      */
     public void setImplSrcDirName(String implSrcDirName) {
         this.implSrcDirName = implSrcDirName;
     }
 
+    /**
+     * Returns the path to the folder where the generated service api source files will be written to.
+     *
+     * @return the path to the folder where the generated service api source files will be written to
+     */
     public String getApiSrcDirName() {
         if (apiSrcDirName != null) {
             return apiSrcDirName;
@@ -125,10 +130,22 @@ public class ServiceBuilderPluginExtension {
                 .getAllJava().getSrcDirs().iterator().next().getPath();
     }
 
+    /**
+     * Sets the path to the folder where the generated service api source files will be written to.
+     * If unset this value defaults to the first source folder in the service sourceset
+     *
+     * @param apiSrcDirName the path to the folder where the generated service api source files will be written to
+     */
     public void setApiSrcDirName(String apiSrcDirName) {
         this.apiSrcDirName = apiSrcDirName;
     }
 
+    /**
+     * Returns the path to the folder where the generated resource files
+     * (hibernate mappings / application contexts etc) will be written to.
+     *
+     * @return path to the folder where the generated resource files will be written to
+     */
     public String getResourceDirName() {
         if (resourceDirName != null) {
             return resourceDirName;
@@ -137,14 +154,33 @@ public class ServiceBuilderPluginExtension {
                 .getResources().getSrcDirs().iterator().next().getPath();
     }
 
+    /**
+     * Sets the path to the folder where the generated resource files
+     * (hibernate mappings / application contexts etc) will be written to.
+     * If unset this value defaults to the first resource folder in the main sourceset
+     *
+     * @param resourceDirName path to the folder where the generated resource files will be written to
+     */
     public void setResourceDirName(String resourceDirName) {
         this.resourceDirName = resourceDirName;
     }
 
+    /**
+     * Returns a file that points to the service input file. This declares the entity for which a service
+     * is generated.
+     *
+     * @return the file that points to the service input file
+     */
     public File getServiceInputFile() {
         return project.file(getServiceInputFileName());
     }
 
+    /**
+     * Returns the file that points to the jalopy file. This file configures the formatter that formats the
+     * generated code.
+     *
+     * @return the file that points to the jalopy file
+     */
     public File getJalopyInputFile() {
         if (getJalopyInputFileName() == null) {
             return null;
@@ -152,18 +188,41 @@ public class ServiceBuilderPluginExtension {
         return project.file(getJalopyInputFileName());
     }
 
+    /**
+     * Returns the file that points to the folder where the generated service implementation source files will be
+     * written to.
+     *
+     * @return the file that points to the folder where the generated service implementation source files will be
+     *         written to
+     */
     public File getImplSrcDir() {
         return project.file(getImplSrcDirName());
     }
 
+    /**
+     * Returns the file that points to the folder where the generated service api source files will be written to.
+     *
+     * @return the file that points to the folder where the generated service api source files will be written to
+     */
     public File getApiSrcDir() {
         return project.file(getApiSrcDirName());
     }
 
+    /**
+     * Returns the file that points to the folder where the generated resource files
+     * (hibernate mappings / application contexts etc) will be written to.
+     *
+     * @return the file that points to the folder where the generated resource files will be written to
+     */
     public File getResourceDir() {
         return project.file(getResourceDirName());
     }
 
+    /**
+     * Configures this class from a groovy closure.
+     *
+     * @param closure the closure that configures this class
+     */
     public void servicebuilder(Closure closure) {
         ConfigureUtil.configure(closure, this);
     }

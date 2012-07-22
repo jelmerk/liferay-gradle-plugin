@@ -288,10 +288,10 @@ public class BuildService extends DefaultTask {
 
 
     /**
-     * Returns the file that points to the directory where the generated service implementation source files will be
+     * Returns the file that points to the folder where the generated service implementation source files will be
      * written to.
      *
-     * @return the file that points to the directory where the generated service implementation source files will be
+     * @return the file that points to the folder where the generated service implementation source files will be
      *         written to
      */
     @OutputDirectory
@@ -300,10 +300,10 @@ public class BuildService extends DefaultTask {
     }
 
     /**
-     * Sets the file that points to the directory where the generated service implementation source files will be
+     * Sets the file that points to the folder where the generated service implementation source files will be
      * written to. This property is required.
      *
-     * @param implSrcDir file that points to the directory where the generated service implementation source files
+     * @param implSrcDir file that points to the folder where the generated service implementation source files
      *                   will be written to.
      */
     public void setImplSrcDir(File implSrcDir) {
@@ -311,9 +311,9 @@ public class BuildService extends DefaultTask {
     }
 
     /**
-     * Returns the file that points to the directory where the generated service api source files will be written to.
+     * Returns the file that points to the folder where the generated service api source files will be written to.
      *
-     * @return the file that points to the directory where the generated service api source files will be written to
+     * @return the file that points to the folder where the generated service api source files will be written to
      */
     @OutputDirectory
     public File getApiSrcDir() {
@@ -321,10 +321,10 @@ public class BuildService extends DefaultTask {
     }
 
     /**
-     * Sets the file that points to the directory where the generated service api source files will be written to.
+     * Sets the file that points to the folder where the generated service api source files will be written to.
      * This property is required.
      *
-     * @param apiSrcDir file that points to the directory where the generated service api source files will be
+     * @param apiSrcDir file that points to the folder where the generated service api source files will be
      *                  written to.
      */
     public void setApiSrcDir(File apiSrcDir) {
@@ -332,10 +332,10 @@ public class BuildService extends DefaultTask {
     }
 
     /**
-     * Returns the file that points to the directory where the generated resource files
+     * Returns the file that points to the folder where the generated resource files
      * (hibernate mappings / application contexts etc) will be written to.
      *
-     * @return the file that points to the directory where the generated resource files will be written to
+     * @return the file that points to the folder where the generated resource files will be written to
      */
     @OutputDirectory
     public File getResourceDir() {
@@ -343,19 +343,19 @@ public class BuildService extends DefaultTask {
     }
 
     /**
-     * Sets the file that points to the directory where the generated resource files
+     * Sets the file that points to the folder where the generated resource files
      * (hibernate mappings / application contexts etc) will be written to. This property is required.
      *
-     * @param resourceDir file that points to the directory where the generated resource files will be written to
+     * @param resourceDir file that points to the folder where the generated resource files will be written to
      */
     public void setResourceDir(File resourceDir) {
         this.resourceDir = resourceDir;
     }
 
     /**
-     * Returns the web application directory where generated sql files etc will be written to.
+     * Returns the web application folder where generated sql files etc will be written to.
      *
-     * @return the web application directory where generated sql files etc will be written to
+     * @return the web application folder where generated sql files etc will be written to
      */
     @OutputDirectory
     public File getWebappSrcDir() {
@@ -363,9 +363,9 @@ public class BuildService extends DefaultTask {
     }
 
     /**
-     * Sets the web application directory where generated sql files etc will be written to.
+     * Sets the web application folder where generated sql files etc will be written to.
      *
-     * @param webappSrcDir the web application directory where generated sql files etc will be written to
+     * @param webappSrcDir the web application folder where generated sql files etc will be written to
      */
     public void setWebappDir(File webappSrcDir) {
         this.webappSrcDir = webappSrcDir;
