@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.github.jelmerk;
 
 import org.gradle.api.Project;
@@ -22,44 +21,28 @@ import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 /**
- * Tests {@link LiferayBasePlugin}
- *
  * @author Jelmer Kuperus
  */
-public class LiferayBasePluginTest {
+public class PortletPluginTest {
 
     Project project;
-    LiferayBasePlugin plugin;
+    ServiceBuilderPlugin plugin;
 
     @Before
     public void setup() {
         project = ProjectBuilder.builder().build();
-        plugin = new LiferayBasePlugin();
+        plugin = new ServiceBuilderPlugin();
     }
 
     @Test
-    public void testAppliesBasePluginsAndAddsExtensionObject() {
+    public void testAppliedBasePlugins() {
         plugin.apply(project);
 
+        assertTrue(project.getPlugins().hasPlugin(LiferayBasePlugin.class));
         assertTrue(project.getPlugins().hasPlugin(WarPlugin.class));
-    }
-
-    @Test
-    public void testAddedExtension() {
-        plugin.apply(project);
-        assertTrue(project.getExtensions().getByName(LiferayBasePlugin.LIFERAY_EXTENSION_NAME)
-                instanceof LiferayPluginExtension);
-    }
-
-    @Test
-    public void testCreatesDeployTask() {
-        plugin.apply(project);
-
-        Deploy task = (Deploy) project.getTasks().getByName(LiferayBasePlugin.DEPLOY_TASK_NAME);
-        assertNotNull(task);
     }
 
 }

@@ -103,11 +103,11 @@ configurations {
 }
 
 dependencies {
-    jacoco group: 'org.jacoco', name: 'org.jacoco.agent', version: 'org.jacoco', classifier: 'runtime'
+    jacoco group: 'org.jacoco', name: 'org.jacoco.agent', version: '0.5.8.201207111220', classifier: 'runtime'
 }
 
 test {
-    jvmArgs '-javaagent:${configurations.jacoco.asPath}=destfile=${buildDir}/jacoco.exec,includes=com.github.jelmerk.*'
+    jvmArgs "-javaagent:${configurations.jacoco.asPath}=destfile=${buildDir}/jacoco.exec,includes=com.github.jelmerk.*"
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
