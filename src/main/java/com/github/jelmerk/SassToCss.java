@@ -28,7 +28,7 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.File;
 
 /**
- * Processes Syntactically Awesome StyleSheets (SASS) files.
+ * Implementation of {@link org.gradle.api.Task} that processes Syntactically Awesome StyleSheets (SASS) files.
  *
  * @author Jelmer Kuperus
  */

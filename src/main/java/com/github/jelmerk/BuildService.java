@@ -35,7 +35,8 @@ import org.gradle.api.tasks.TaskExecutionException;
 import java.io.File;
 
 /**
- * Generates a liferay service (java source files and associated configuration) from a xml service definition file.
+ * Implementation of {@link org.gradle.api.Task} that generates a liferay service
+ * (java source files and associated configuration) from a xml service definition file.
  *
  * @author Jelmer Kuperus
  */

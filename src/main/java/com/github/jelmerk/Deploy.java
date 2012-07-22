@@ -25,7 +25,7 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.File;
 
 /**
- * Deploys a liferay plugin.
+ * Implementation of {@link org.gradle.api.Task} that deploys a liferay plugin.
  *
  * @author Jelmer Kuperus
  */

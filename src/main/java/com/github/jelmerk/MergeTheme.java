@@ -29,8 +29,9 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.File;
 
 /**
- * Merges a parent theme and the diffs defined in a theme plugin. When creating a theme in Liferay you usually extend
- * from a parent theme and overwrite only certain files in the childs (the diff)
+ * Implementation of {@link org.gradle.api.Task} that merges a parent theme and the diffs defined in a theme plugin.
+ * When creating a theme in Liferay you usually extend from a parent theme and overwrite only certain files in the
+ * childs (the diff)
  *
  * @author Jelmer Kuperus
  */

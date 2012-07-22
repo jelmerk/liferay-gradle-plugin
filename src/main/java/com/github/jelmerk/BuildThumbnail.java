@@ -31,7 +31,7 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.File;
 
 /**
- * Creates a thumbnail image from a (larger) original image.
+ * Implementation of {@link org.gradle.api.Task} that creates a thumbnail image from a (larger) original image.
  *
  * @author Jelmer Kuperus
  */
