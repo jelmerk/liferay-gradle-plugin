@@ -52,7 +52,7 @@ configure(install.repositories.mavenInstaller) {
         packaging = 'jar'
 
         description 'Liferay plugin for Gradle'
-        url  'https://github.com/jelmerk/liferay-gradle-plugin'
+        url 'https://github.com/jelmerk/liferay-gradle-plugin'
 
         scm {
             connection 'scm:git:http://github.com/jelmerk/liferay-gradle-plugin.git'
@@ -88,14 +88,34 @@ sonar {
         username = 'sonar'
         password = 'sonar'
     }
+
+    project {
+        dynamicAnalysis = "reuseReports"
+        withProjectProperties { props ->
+            props["sonar.core.codeCoveragePlugin"] = "jacoco"
+            props["sonar.jacoco.reportPath"] = "${buildDir}/jacoco.exec"
+        }
+    }
 }
 
-task sourcesJar(type: Jar, dependsOn:classes) {
+configurations {
+    jacoco
+}
+
+dependencies {
+    jacoco group: 'org.jacoco', name: 'org.jacoco.agent', version: 'org.jacoco', classifier: 'runtime'
+}
+
+test {
+    jvmArgs '-javaagent:${configurations.jacoco.asPath}=destfile=${buildDir}/jacoco.exec,includes=com.github.jelmerk.*'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
     from sourceSets.main.allSource
 }
 
-task javadocJar(type: Jar, dependsOn:javadoc) {
+task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from javadoc.destinationDir
 }
