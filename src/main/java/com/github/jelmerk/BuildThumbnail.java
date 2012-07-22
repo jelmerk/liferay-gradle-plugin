@@ -118,11 +118,21 @@ public class BuildThumbnail extends DefaultTask {
 //						</java>
     }
 
+    /**
+     * Returns the file collection that contains the classes required to run buildThumbnail.
+     *
+     * @return the file collection that contains the classes required to run buildThumbnail
+     */
     @InputFiles
     public FileCollection getClasspath() {
         return classpath;
     }
 
+    /**
+     * Sets the file collection that contains the classes required to run buildThumbnail.
+     *
+     * @param classpath the file collection that contains the classes required to run buildThumbnail
+     */
     public void setClasspath(FileCollection classpath) {
         this.classpath = classpath;
     }

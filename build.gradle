@@ -24,6 +24,10 @@ signing {
     sign configurations.archives
 }
 
+javadoc {
+    options.links = ['http://gradle.org/docs/1.0/javadoc/', 'http://docs.oracle.com/javase/1.5.0/docs/api/']
+}
+
 uploadArchives {
     repositories {
         mavenDeployer {
