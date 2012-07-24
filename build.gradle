@@ -116,6 +116,12 @@ sourceSets {
     }
 }
 
+idea {
+    module {
+        sourceDirs += sourceSets.integTest.allJava.srcDirs
+    }
+}
+
 dependencies {
     jacoco group: 'org.jacoco', name: 'org.jacoco.agent', version: '0.5.8.201207111220', classifier: 'runtime'
 }
