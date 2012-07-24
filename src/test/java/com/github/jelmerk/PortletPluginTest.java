@@ -21,20 +21,24 @@ import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * Tests {@link PortletPlugin}
+ *
  * @author Jelmer Kuperus
  */
 public class PortletPluginTest {
 
     Project project;
-    ServiceBuilderPlugin plugin;
+    PortletPlugin plugin;
 
     @Before
     public void setup() {
         project = ProjectBuilder.builder().build();
-        plugin = new ServiceBuilderPlugin();
+        plugin = new PortletPlugin();
     }
 
     @Test
@@ -43,6 +47,14 @@ public class PortletPluginTest {
 
         assertTrue(project.getPlugins().hasPlugin(LiferayBasePlugin.class));
         assertTrue(project.getPlugins().hasPlugin(WarPlugin.class));
+    }
+
+    @Test
+    public void testCreatedSassToCsssTask() {
+        plugin.apply(project);
+        SassToCss task = (SassToCss) project.getTasks().getByName(PortletPlugin.SASS_TO_CSS_TASK_NAME);
+        assertNotNull(task);
+        assertEquals(null, task.getGroup());
     }
 
 }

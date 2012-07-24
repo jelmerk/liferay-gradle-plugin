@@ -93,13 +93,27 @@ sonar {
         dynamicAnalysis = "reuseReports"
         withProjectProperties { props ->
             props["sonar.core.codeCoveragePlugin"] = "jacoco"
-            props["sonar.jacoco.reportPath"] = "${buildDir}/jacoco.exec"
+            props["sonar.jacoco.reportPath"] = "${buildDir}/jacoco.unit"
+            props["sonar.jacoco.itReportPath"] = "${buildDir}/jacoco.integration"
         }
     }
 }
 
 configurations {
     jacoco
+    integTestCompile {
+        extendsFrom testCompile
+    }
+    integTestRuntime {
+        extendsFrom integTestCompile, testRuntime
+    }
+}
+
+sourceSets {
+    integTest {
+        compileClasspath = sourceSets.main.output + sourceSets.test.output + configurations.integTestCompile
+        runtimeClasspath = output + compileClasspath + configurations.integTestRuntime
+    }
 }
 
 dependencies {
@@ -107,7 +121,16 @@ dependencies {
 }
 
 test {
-    jvmArgs "-javaagent:${configurations.jacoco.asPath}=destfile=${buildDir}/jacoco.exec,includes=com.github.jelmerk.*"
+    jvmArgs "-javaagent:${configurations.jacoco.asPath}=destfile=${buildDir}/jacoco.unit,includes=com.github.jelmerk.*"
+}
+
+task integTest(type: Test) {
+    testSrcDirs = sourceSets.integTest.java.srcDirs.asList()
+    classpath = sourceSets.integTest.runtimeClasspath
+    testClassesDir = sourceSets.integTest.output.classesDir
+    description = 'Runs the integration tests.'
+    group = 'verification'
+    jvmArgs "-javaagent:${configurations.jacoco.asPath}=destfile=${buildDir}/jacoco.integration,includes=com.github.jelmerk.*"
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
