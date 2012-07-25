@@ -130,13 +130,20 @@ test {
     jvmArgs "-javaagent:${configurations.jacoco.asPath}=destfile=${buildDir}/jacoco.unit,includes=com.github.jelmerk.*"
 }
 
+task copyIntegTestProjects(type: Copy) {
+   from "src/integTest/projects"
+   into "${buildDir}/integTestProjects"
+}
+
 task integTest(type: Test) {
     testSrcDirs = sourceSets.integTest.java.srcDirs.asList()
     classpath = sourceSets.integTest.runtimeClasspath
     testClassesDir = sourceSets.integTest.output.classesDir
     description = 'Runs the integration tests.'
     group = 'verification'
-    jvmArgs "-javaagent:${configurations.jacoco.asPath}=destfile=${buildDir}/jacoco.integration,includes=com.github.jelmerk.*"
+    jvmArgs "-javaagent:${configurations.jacoco.asPath}=destfile=${buildDir}/jacoco.integration,includes=com.github.jelmerk.*",
+            "-DintegTestProjectsDir=${buildDir}/integTestProjects"
+    dependsOn jar, copyIntegTestProjects
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {

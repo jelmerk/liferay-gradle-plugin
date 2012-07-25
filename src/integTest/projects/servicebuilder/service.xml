@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 6.1.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_6_1_0.dtd">
+
+<service-builder package-path="com.github.jelmerk.servicebuilder">
+    <author>Jelmer Kuperus</author>
+    <namespace>Foo</namespace>
+	<entity name="Bar" local-service="true" remote-service="false">
+		<column name="barId" type="long" primary="true" />
+        <column name="name" type="long" />
+	</entity>
+</service-builder>
