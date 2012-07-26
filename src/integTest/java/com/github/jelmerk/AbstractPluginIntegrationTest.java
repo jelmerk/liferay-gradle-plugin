@@ -18,12 +18,18 @@ package com.github.jelmerk;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import org.gradle.tooling.BuildLauncher;
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Abstract base class for integration tests.
@@ -36,6 +42,23 @@ public abstract class AbstractPluginIntegrationTest {
 
     protected File getProjectDir(String projectName) {
         return new File(System.getProperty(PROPJECCT_DIR_SYSTEM_PROPERTY_NAME), projectName);
+    }
+
+    protected void runBuild(File projectDir, String... targets) {
+        DefaultGradleConnector connector = (DefaultGradleConnector) GradleConnector.newConnector();
+
+        ProjectConnection connection = connector
+                .embedded(true)
+                .forProjectDirectory(projectDir)
+                .connect();
+        try {
+            BuildLauncher build = connection.newBuild();
+            build.forTasks(targets);
+            build.run();
+
+        } finally {
+            connection.close();
+        }
     }
 
     protected String readUtf8TextFile(File file) throws IOException {

@@ -16,10 +16,6 @@
 
 package com.github.jelmerk;
 
-import org.gradle.tooling.BuildLauncher;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
-import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,28 +39,14 @@ public class PortletPluginIntegrationTest extends AbstractPluginIntegrationTest 
 
     @Test
     public void testIntegration() throws Exception {
-        DefaultGradleConnector connector = (DefaultGradleConnector) GradleConnector.newConnector();
 
-        ProjectConnection connection = connector
-                .embedded(true)
-                .forProjectDirectory(projectDir)
-                .connect();
+        runBuild(projectDir, "clean", "war");
 
-        try {
-            BuildLauncher build = connection.newBuild();
-            build.forTasks("clean", "war");
-            build.run();
+        File createdWarFile = new File(projectDir, "build/libs/portlet.war");
 
-            File createdWarFile = new File(projectDir, "build/libs/portlet.war");
-
-            assertTrue(createdWarFile.exists());
-            assertTrue(hasZipEntry(createdWarFile, "index.jsp"));
-            assertTrue(hasZipEntry(createdWarFile, "css/.sass-cache/main.css"));
-
-        } finally {
-            connection.close();
-        }
-
+        assertTrue(createdWarFile.exists());
+        assertTrue(hasZipEntry(createdWarFile, "index.jsp"));
+        assertTrue(hasZipEntry(createdWarFile, "css/.sass-cache/main.css"));
     }
 
 }

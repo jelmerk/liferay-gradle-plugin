@@ -16,15 +16,12 @@
 
 package com.github.jelmerk;
 
-import org.gradle.tooling.BuildLauncher;
-import org.gradle.tooling.GradleConnector;
-import org.gradle.tooling.ProjectConnection;
-import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import java.io.File;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Integration test for testing the servicebuilder plugin.
@@ -42,42 +39,28 @@ public class ServiceBuilderPluginIntegrationTest extends AbstractPluginIntegrati
 
     @Test
     public void testIntegration() throws Exception {
-        DefaultGradleConnector connector = (DefaultGradleConnector) GradleConnector.newConnector();
 
-        ProjectConnection connection = connector
-                .embedded(true)
-                .forProjectDirectory(projectDir)
-                .connect();
+        runBuild(projectDir, "clean", "generateService");
 
-        try {
-            BuildLauncher build = connection.newBuild();
-            build.forTasks("clean", "generateService");
-            build.run();
+        // check if the api was generated
 
-            // check if the api was generated
+        File generatedServiceInterfaceFile = new File(projectDir,
+                "src/service/java/com/github/jelmerk/servicebuilder/service/BarLocalService.java");
 
-            File generatedServiceInterfaceFile = new File(projectDir,
-                    "src/service/java/com/github/jelmerk/servicebuilder/service/BarLocalService.java");
+        assertTrue(generatedServiceInterfaceFile.exists());
 
-            assertTrue(generatedServiceInterfaceFile.exists());
+        // check if the impl was generated
 
+        File generatedServiceImplFile = new File(projectDir,
+                "src/main/java/com/github/jelmerk/servicebuilder/service/impl/BarLocalServiceImpl.java");
 
-            // check if the impl was generated
+        assertTrue(generatedServiceImplFile.exists());
 
-            File generatedServiceImplFile = new File(projectDir,
-                    "src/main/java/com/github/jelmerk/servicebuilder/service/impl/BarLocalServiceImpl.java");
+        // check that the jalopy file was used
 
-            assertTrue(generatedServiceImplFile.exists());
-
-            // check that the jalopy file was used
-
-            String generatedServiceImplFileContent = readUtf8TextFile(generatedServiceImplFile);
-            assertTrue(generatedServiceImplFileContent
-                    .contains("Copyright (c) 2012 Jelmer Kuperus All rights reserved."));
-
-        } finally {
-            connection.close();
-        }
+        String generatedServiceImplFileContent = readUtf8TextFile(generatedServiceImplFile);
+        assertTrue(generatedServiceImplFileContent
+                .contains("Copyright (c) 2012 Jelmer Kuperus All rights reserved."));
 
     }
 
