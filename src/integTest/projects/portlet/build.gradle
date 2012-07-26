@@ -1,0 +1,16 @@
+apply plugin: 'liferay-portlet'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+buildscript {
+    dependencies {
+        classpath files("${buildDir}/../../../libs/liferay-plugin-0.1.0-SNAPSHOT.jar")
+    }
+}
+
+liferay {
+    appServerDirName = liferayHome
+}

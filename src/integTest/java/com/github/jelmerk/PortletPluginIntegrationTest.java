@@ -22,22 +22,23 @@ import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import java.io.File;
 
+import static org.junit.Assert.assertTrue;
+
 /**
- * Integration test for testing the servicebuilder plugin.
+ * Integration test for testing the portlet plugin.
  *
  * @author Jelmer Kuperus
  */
-public class ServiceBuilderPluginIntegrationTest extends AbstractPluginIntegrationTest {
+public class PortletPluginIntegrationTest extends AbstractPluginIntegrationTest {
 
     private File projectDir;
 
     @Before
     public void setup() {
-        projectDir = getProjectDir("servicebuilder");
+        projectDir = getProjectDir("portlet");
     }
 
     @Test
@@ -51,29 +52,14 @@ public class ServiceBuilderPluginIntegrationTest extends AbstractPluginIntegrati
 
         try {
             BuildLauncher build = connection.newBuild();
-            build.forTasks("clean", "generateService");
+            build.forTasks("clean", "war");
             build.run();
 
-            // check if the api was generated
+            File createdWarFile = new File(projectDir, "build/libs/portlet.war");
 
-            File generatedServiceInterfaceFile = new File(projectDir,
-                    "src/service/java/com/github/jelmerk/servicebuilder/service/BarLocalService.java");
-
-            assertTrue(generatedServiceInterfaceFile.exists());
-
-
-            // check if the impl was generated
-
-            File generatedServiceImplFile = new File(projectDir,
-                    "src/main/java/com/github/jelmerk/servicebuilder/service/impl/BarLocalServiceImpl.java");
-
-            assertTrue(generatedServiceImplFile.exists());
-
-            // check that the jalopy file was used
-
-            String generatedServiceImplFileContent = readUtf8TextFile(generatedServiceImplFile);
-            assertTrue(generatedServiceImplFileContent
-                    .contains("Copyright (c) 2012 Jelmer Kuperus All rights reserved."));
+            assertTrue(createdWarFile.exists());
+            assertTrue(hasZipEntry(createdWarFile, "index.jsp"));
+            assertTrue(hasZipEntry(createdWarFile, "css/.sass-cache/main.css"));
 
         } finally {
             connection.close();

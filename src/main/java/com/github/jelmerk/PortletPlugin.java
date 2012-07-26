@@ -22,9 +22,19 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.plugins.WarPluginConvention;
+import org.gradle.api.tasks.Copy;
+import org.gradle.api.tasks.bundling.War;
+
+import java.io.File;
+import static  java.util.Arrays.asList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
 
 /**
  * Implementation of {@link Plugin} that adds tasks and configuration for creating Liferay portlets.
@@ -40,9 +50,16 @@ public class PortletPlugin implements Plugin<Project> {
     public static final String SASS_TO_CSS_TASK_NAME = "sassToCss";
 
     /**
+     * The name of the task that copies css files to the build folder for processing by sassToCss
+     */
+    public static final String PREPARE_SASS_TO_CSS_TASK_NAME = "prepareSasToCss";
+
+    /**
      * The name of the configuration that holds the classes required to run sassToCss.
      */
     public static final String SASS_CONFIGURATION_NAME = "sass";
+
+    private static final String SASS_OUTPUT_DIR = "sass";
 
     /**
      * {@inheritDoc}
@@ -54,7 +71,10 @@ public class PortletPlugin implements Plugin<Project> {
         createConfiguration(project);
 
         configureSassToCssTaskDefaults(project);
+
+        configurePrepareSassToCssTask(project);
         configureSassToCssTask(project);
+        configureWarTask(project);
     }
 
     private void createConfiguration(Project project) {
@@ -68,13 +88,36 @@ public class PortletPlugin implements Plugin<Project> {
         project.getGradle().addBuildListener(new SassToCssTaskDefaultsBuildListener(project));
     }
 
+    private void configurePrepareSassToCssTask(Project project) {
+        Copy copyTask = project.getTasks().add(PREPARE_SASS_TO_CSS_TASK_NAME, Copy.class);
+
+        copyTask.from(new WebAppDirCallable(project));
+        copyTask.setIncludes(asList("**/*.css"));
+        copyTask.into(new File(project.getBuildDir(), SASS_OUTPUT_DIR));
+    }
+
     private void configureSassToCssTask(Project project) {
+
+        Task prepareSassTask = project.getTasks().getByName(PREPARE_SASS_TO_CSS_TASK_NAME);
+
         SassToCss task = project.getTasks().add(SASS_TO_CSS_TASK_NAME, SassToCss.class);
+        task.setSassDir(new File(project.getBuildDir(), SASS_OUTPUT_DIR));
+        task.dependsOn(prepareSassTask);
+    }
 
-        project.getGradle().addBuildListener(new SassToCssTaskBuildListener(project, task));
+    private void configureWarTask(Project project) {
+        Task sassToCssTask = project.getTasks().getByName(SASS_TO_CSS_TASK_NAME);
 
-        Task warTask = project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
-        warTask.dependsOn(task);
+        War warTask = (War) project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
+        warTask.dependsOn(sassToCssTask);
+
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("dir", new File(project.getBuildDir(), SASS_OUTPUT_DIR));
+        args.put("include", "**/.sass-cache/**/*");
+
+        FileTree generatedSassCaches = project.fileTree(args);
+
+        warTask.from(generatedSassCaches);
     }
 
     private static final class SassToCssTaskDefaultsBuildListener extends BuildAdapter {
@@ -87,10 +130,10 @@ public class PortletPlugin implements Plugin<Project> {
         @Override
         public void projectsEvaluated(Gradle gradle) {
 
-            final LiferayPluginExtension liferayPluginExtension = project.getExtensions()
+            LiferayPluginExtension liferayPluginExtension = project.getExtensions()
                     .findByType(LiferayPluginExtension.class);
 
-            final Configuration sassConfiguration = project.getConfigurations().getByName("sass");
+            Configuration sassConfiguration = project.getConfigurations().getByName(SASS_CONFIGURATION_NAME);
 
             if (sassConfiguration.getDependencies().isEmpty()) {
 
@@ -128,22 +171,17 @@ public class PortletPlugin implements Plugin<Project> {
         }
     }
 
-    private static final class SassToCssTaskBuildListener extends BuildAdapter {
+    private static final class WebAppDirCallable implements Callable<File> {
         private final Project project;
-        private final SassToCss task;
 
-        private SassToCssTaskBuildListener(Project project, SassToCss task) {
+        private WebAppDirCallable(Project project) {
             this.project = project;
-            this.task = task;
         }
 
         @Override
-        public void projectsEvaluated(Gradle gradle) {
+        public File call() {
             WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
-
-            if (task.getSassDir() == null) {
-                task.setSassDir(warConvention.getWebAppDir());
-            }
+            return warConvention.getWebAppDir();
         }
     }
 }
