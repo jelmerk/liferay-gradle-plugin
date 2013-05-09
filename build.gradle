@@ -8,8 +8,10 @@ group = 'com.github.jelmerk'
 archivesBaseName = 'liferay-plugin'
 version = '0.1.0-SNAPSHOT'
 
-sourceCompatibility = 1.5
-targetCompatibility = 1.5
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+defaultTasks 'clean', 'test', 'integTest', 'install'
 
 repositories {
     mavenLocal()
