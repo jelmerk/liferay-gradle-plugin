@@ -123,7 +123,7 @@ idea {
 }
 
 dependencies {
-    jacoco group: 'org.jacoco', name: 'org.jacoco.agent', version: '0.5.8.201207111220', classifier: 'runtime'
+    jacoco group: 'org.jacoco', name: 'org.jacoco.agent', version: '0.6.2.201302030002', classifier: 'runtime'
 }
 
 test {
