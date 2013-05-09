@@ -72,7 +72,7 @@ public class LiferayBasePlugin implements Plugin<Project> {
     private void configureDeployTask(Project project) {
         War warTask = (War) project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
 
-        Deploy deploy = project.getTasks().add(DEPLOY_TASK_NAME, Deploy.class);
+        Deploy deploy = project.getTasks().create(DEPLOY_TASK_NAME, Deploy.class);
         deploy.setDescription("Deploys the plugin");
         deploy.setGroup(LiferayBasePlugin.LIFERAY_GROUP_NAME);
 

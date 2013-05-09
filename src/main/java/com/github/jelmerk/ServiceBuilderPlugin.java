@@ -103,11 +103,11 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     }
 
     private void configureConfigurations(Project project) {
-        Configuration serviceBuilderConfiguration = project.getConfigurations().add(SERVICE_BUILDER_CONFIGURATION_NAME);
+        Configuration serviceBuilderConfiguration = project.getConfigurations().create(SERVICE_BUILDER_CONFIGURATION_NAME);
         serviceBuilderConfiguration.setVisible(false);
         serviceBuilderConfiguration.setDescription("The servicebuilder configuration");
 
-        Configuration serviceConfiguration = project.getConfigurations().add(SERVICE_CONFIGURATION_NAME);
+        Configuration serviceConfiguration = project.getConfigurations().create(SERVICE_CONFIGURATION_NAME);
         serviceConfiguration.setDescription("The service configuration");
     }
 
@@ -117,14 +117,14 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
 
     private void configureSourceSets(Project project) {
         JavaPluginConvention pluginConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-        pluginConvention.getSourceSets().add(SERVICE_SOURCE_SET_NAME);
+        pluginConvention.getSourceSets().create(SERVICE_SOURCE_SET_NAME);
     }
 
     private void configureArchives(Project project) {
 
         JavaPluginConvention pluginConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
 
-        Jar jar = project.getTasks().add(JAR_SERVICE_TASK_NAME, Jar.class);
+        Jar jar = project.getTasks().create(JAR_SERVICE_TASK_NAME, Jar.class);
 
         jar.setDescription("Assembles a jar archive containing the servicebuilder classes.");
         jar.setGroup(BasePlugin.BUILD_GROUP);
@@ -140,7 +140,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     }
 
     private void configureBuildServiceTask(Project project) {
-        BuildService task = project.getTasks().add(GENERATE_SERVICE_TASK_NAME, BuildService.class);
+        BuildService task = project.getTasks().create(GENERATE_SERVICE_TASK_NAME, BuildService.class);
 
         project.getGradle().addBuildListener(new BuildServiceTaskBuildListener(project, task));
 
@@ -154,7 +154,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
 
         SourceSet serviceSourceSet = javaConvention.getSourceSets().getByName(SERVICE_SOURCE_SET_NAME);
-        Javadoc serviceJavadoc = project.getTasks().add(JAVADOC_SERVICE_TASK_NAME, Javadoc.class);
+        Javadoc serviceJavadoc = project.getTasks().create(JAVADOC_SERVICE_TASK_NAME, Javadoc.class);
         serviceJavadoc.setDescription("Generates Javadoc API documentation for the servicebuilder service api.");
         serviceJavadoc.setGroup(JavaBasePlugin.DOCUMENTATION_GROUP);
         serviceJavadoc.setClasspath(serviceSourceSet.getOutput().plus(serviceSourceSet.getCompileClasspath()));

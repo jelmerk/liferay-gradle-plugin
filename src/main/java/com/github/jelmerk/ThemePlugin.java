@@ -88,7 +88,7 @@ public class ThemePlugin implements Plugin<Project> {
 
         ThemePluginExtension themeExtension = project.getExtensions().getByType(ThemePluginExtension.class);
 
-        MergeTheme task = project.getTasks().add(MERGE_THEME_TASK_NAME, MergeTheme.class);
+        MergeTheme task = project.getTasks().create(MERGE_THEME_TASK_NAME, MergeTheme.class);
         task.setThemeType(themeExtension.getThemeType());
 
         project.getGradle().addBuildListener(new MergeTemplateTaskBuildListener(task, themeExtension, warConvention));
@@ -104,7 +104,7 @@ public class ThemePlugin implements Plugin<Project> {
 
         Task mergeTask = project.getTasks().getByName(MERGE_THEME_TASK_NAME);
 
-        BuildThumbnail task = project.getTasks().add(BUILD_THUMBNAIL_TASK_NAME, BuildThumbnail.class);
+        BuildThumbnail task = project.getTasks().create(BUILD_THUMBNAIL_TASK_NAME, BuildThumbnail.class);
 
         project.getGradle().addBuildListener(new BuildThumbnailTaskBuildListener(task, themeExtension, warConvention));
         task.dependsOn(mergeTask);

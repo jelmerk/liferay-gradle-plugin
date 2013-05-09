@@ -78,7 +78,7 @@ public class PortletPlugin implements Plugin<Project> {
     }
 
     private void createConfiguration(Project project) {
-        Configuration configuration = project.getConfigurations().add(SASS_CONFIGURATION_NAME);
+        Configuration configuration = project.getConfigurations().create(SASS_CONFIGURATION_NAME);
 
         configuration.setVisible(false);
         configuration.setDescription("The sass configuration");
@@ -89,8 +89,8 @@ public class PortletPlugin implements Plugin<Project> {
     }
 
     private void configurePrepareSassToCssTask(Project project) {
-        Copy copyTask = project.getTasks().add(PREPARE_SASS_TO_CSS_TASK_NAME, Copy.class);
-
+        // TODO: if we don't have any .css files in our path the output dir won't be created
+        Copy copyTask = project.getTasks().create(PREPARE_SASS_TO_CSS_TASK_NAME, Copy.class);
         copyTask.from(new WebAppDirCallable(project));
         copyTask.setIncludes(asList("**/*.css"));
         copyTask.into(new File(project.getBuildDir(), SASS_OUTPUT_DIR));
@@ -100,7 +100,7 @@ public class PortletPlugin implements Plugin<Project> {
 
         Task prepareSassTask = project.getTasks().getByName(PREPARE_SASS_TO_CSS_TASK_NAME);
 
-        SassToCss task = project.getTasks().add(SASS_TO_CSS_TASK_NAME, SassToCss.class);
+        SassToCss task = project.getTasks().create(SASS_TO_CSS_TASK_NAME, SassToCss.class);
         task.setSassDir(new File(project.getBuildDir(), SASS_OUTPUT_DIR));
         task.dependsOn(prepareSassTask);
     }
