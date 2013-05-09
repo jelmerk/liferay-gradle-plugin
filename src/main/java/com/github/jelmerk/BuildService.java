@@ -79,7 +79,7 @@ public class BuildService extends DefaultTask {
         mkServicebuilderMainSourceSetDir.execute();
 
         Mkdir mkSqlDir = new Mkdir();
-        mkSqlDir.setDir(new File(getWebappSrcDir(), "sql"));
+        mkSqlDir.setDir(new File(getWebappSrcDir(), "/WEB-INF/sql"));
         mkSqlDir.execute();
     }
 
