@@ -90,8 +90,11 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
 
-        configureSourceSets(project);
-        configureConfigurations(project);
+        createServiceSourceSets(project);
+
+        createServiceBuilderConfiguration(project);
+        createServiceConfiguration(project);
+
         createServiceBuilderExtension(project);
 
         configureArchives(project);
@@ -99,25 +102,27 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         configureServiceJavaDoc(project);
 
         configureBuildServiceTaskDefaults(project);
-        configureBuildServiceTask(project);
+        createBuildServiceTask(project);
     }
 
-    private void configureConfigurations(Project project) {
-        Configuration serviceBuilderConfiguration = project.getConfigurations().create(SERVICE_BUILDER_CONFIGURATION_NAME);
-        serviceBuilderConfiguration.setVisible(false);
-        serviceBuilderConfiguration.setDescription("The servicebuilder configuration");
+    private void createServiceBuilderConfiguration(Project project) {
+        project.getConfigurations().create(SERVICE_BUILDER_CONFIGURATION_NAME)
+            .setVisible(false)
+            .setDescription("The servicebuilder configuration");
+    }
 
-        Configuration serviceConfiguration = project.getConfigurations().create(SERVICE_CONFIGURATION_NAME);
-        serviceConfiguration.setDescription("The service configuration");
+    private void createServiceConfiguration(Project project) {
+        project.getConfigurations().create(SERVICE_CONFIGURATION_NAME)
+                .setDescription("The service configuration");
     }
 
     private void createServiceBuilderExtension(Project project) {
         project.getExtensions().create(SERVICEBUILDER_EXTENSION_NAME, ServiceBuilderPluginExtension.class, project);
     }
 
-    private void configureSourceSets(Project project) {
-        JavaPluginConvention pluginConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-        pluginConvention.getSourceSets().create(SERVICE_SOURCE_SET_NAME);
+    private void createServiceSourceSets(Project project) {
+        project.getConvention().getPlugin(JavaPluginConvention.class)
+                .getSourceSets().create(SERVICE_SOURCE_SET_NAME);
     }
 
     private void configureArchives(Project project) {
@@ -139,7 +144,7 @@ public class ServiceBuilderPlugin implements Plugin<Project> {
         project.getGradle().addBuildListener(new BuildServiceTaskDefaultsBuildListener(project));
     }
 
-    private void configureBuildServiceTask(Project project) {
+    private void createBuildServiceTask(Project project) {
         BuildService task = project.getTasks().create(GENERATE_SERVICE_TASK_NAME, BuildService.class);
 
         project.getGradle().addBuildListener(new BuildServiceTaskBuildListener(project, task));

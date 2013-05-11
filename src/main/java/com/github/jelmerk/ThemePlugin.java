@@ -63,15 +63,15 @@ public class ThemePlugin implements Plugin<Project> {
         configureWar(project);
 
         configureMergeTemplateTaskDefaults(project);
-        configureMergeTemplateTask(project);
+        createMergeTemplateTask(project);
 
         configureBuildThumbnailTaskDefaults(project);
-        configureBuildThumbnailTask(project);
+        createBuildThumbnailTask(project);
     }
 
     private void configureWar(Project project) {
-        WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
-        warConvention.setWebAppDirName(new File(project.getBuildDir(), "webapp").getAbsolutePath());
+        project.getConvention().getPlugin(WarPluginConvention.class)
+            .setWebAppDirName(new File(project.getBuildDir(), "webapp").getAbsolutePath());
     }
 
     private void createThemeExtension(Project project) {
@@ -82,7 +82,7 @@ public class ThemePlugin implements Plugin<Project> {
         project.getGradle().addBuildListener(new MergeTemplateTaskDefaultsBuildListener(project));
     }
 
-    private void configureMergeTemplateTask(Project project) {
+    private void createMergeTemplateTask(Project project) {
 
         WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
 
@@ -98,7 +98,7 @@ public class ThemePlugin implements Plugin<Project> {
         project.getGradle().addBuildListener(new BuildThumbnailTaskDefaultsBuildListener(project));
     }
 
-    private void configureBuildThumbnailTask(Project project) {
+    private void createBuildThumbnailTask(Project project) {
         WarPluginConvention warConvention = project.getConvention().getPlugin(WarPluginConvention.class);
         ThemePluginExtension themeExtension = project.getExtensions().getByType(ThemePluginExtension.class);
 

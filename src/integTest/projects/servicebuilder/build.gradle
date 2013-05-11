@@ -17,5 +17,5 @@ liferay {
 }
 
 servicebuilder {
-    jalopyInputFileName = file('jalopy.xml')
+    jalopyInputFileName = file('src/main/servicebuilder/jalopy.xml')
 }

@@ -78,7 +78,7 @@ public class ServiceBuilderPluginExtension {
         if (serviceInputFileName != null) {
             return serviceInputFileName;
         }
-        return new File("service.xml").getPath();
+        return new File("src/main/servicebuilder/service.xml").getPath();
     }
 
     /**

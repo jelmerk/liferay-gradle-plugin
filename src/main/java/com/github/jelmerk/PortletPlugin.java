@@ -17,10 +17,7 @@
 package com.github.jelmerk;
 
 import org.gradle.BuildAdapter;
-import org.gradle.api.Action;
-import org.gradle.api.Plugin;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
+import org.gradle.api.*;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.invocation.Gradle;
@@ -30,11 +27,11 @@ import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.bundling.War;
 
 import java.io.File;
-import static  java.util.Arrays.asList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import static  java.util.Arrays.asList;
 
 /**
  * Implementation of {@link Plugin} that adds tasks and configuration for creating Liferay portlets.
@@ -50,9 +47,15 @@ public class PortletPlugin implements Plugin<Project> {
     public static final String SASS_TO_CSS_TASK_NAME = "sassToCss";
 
     /**
-     * The name of the task that copies css files to the build folder for processing by sassToCss
+     * The name of the task that copies css files to the the sass directory in the build folder
+     * for processing by sassToCss.
      */
-    public static final String PREPARE_SASS_TO_CSS_TASK_NAME = "prepareSasToCss";
+    public static final String COPY_SASS_FILES_TASK_NAME = "copySassFiles";
+
+    /**
+     * The name of the task that creates the sass directory in the build folder.
+     */
+    public static final String CREATE_SASS_DIR_TASK_NAME = "createSassDir";
 
     /**
      * The name of the configuration that holds the classes required to run sassToCss.
@@ -68,44 +71,51 @@ public class PortletPlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
 
-        createConfiguration(project);
+        createSassConfiguration(project);
 
         configureSassToCssTaskDefaults(project);
 
-        configurePrepareSassToCssTask(project);
-        configureSassToCssTask(project);
-        configureWarTask(project);
+        createCreateSassDirTask(project);
+        createCopySassFilesTask(project);
+        createSassToCssTask(project);
+        createWarTask(project);
     }
 
-    private void createConfiguration(Project project) {
-        Configuration configuration = project.getConfigurations().create(SASS_CONFIGURATION_NAME);
-
-        configuration.setVisible(false);
-        configuration.setDescription("The sass configuration");
+    private void createSassConfiguration(Project project) {
+        project.getConfigurations().create(SASS_CONFIGURATION_NAME)
+            .setVisible(false)
+            .setDescription("The sass configuration");
     }
 
     private void configureSassToCssTaskDefaults(Project project) {
         project.getGradle().addBuildListener(new SassToCssTaskDefaultsBuildListener(project));
     }
 
-    private void configurePrepareSassToCssTask(Project project) {
-        // TODO: if we don't have any .css files in our path the output dir won't be created
-        Copy copyTask = project.getTasks().create(PREPARE_SASS_TO_CSS_TASK_NAME, Copy.class);
-        copyTask.from(new WebAppDirCallable(project));
-        copyTask.setIncludes(asList("**/*.css"));
-        copyTask.into(new File(project.getBuildDir(), SASS_OUTPUT_DIR));
+    private void createCreateSassDirTask(Project project) {
+        // copy task will not create the directory if there are no files to copy
+        project.getTasks().create(CREATE_SASS_DIR_TASK_NAME, MkDirs.class)
+                .setDir(new File(project.getBuildDir(), SASS_OUTPUT_DIR));
     }
 
-    private void configureSassToCssTask(Project project) {
+    private void createCopySassFilesTask(Project project) {
+        Task createSassDirTask = project.getTasks().getByName(CREATE_SASS_DIR_TASK_NAME);
 
-        Task prepareSassTask = project.getTasks().getByName(PREPARE_SASS_TO_CSS_TASK_NAME);
+        project.getTasks().create(COPY_SASS_FILES_TASK_NAME, Copy.class)
+            .from(new WebAppDirCallable(project))
+            .setIncludes(asList("**/*.css"))
+            .into(new File(project.getBuildDir(), SASS_OUTPUT_DIR))
+            .dependsOn(createSassDirTask);
+    }
+
+    private void createSassToCssTask(Project project) {
+        Task prepareSassTask = project.getTasks().getByName(COPY_SASS_FILES_TASK_NAME);
 
         SassToCss task = project.getTasks().create(SASS_TO_CSS_TASK_NAME, SassToCss.class);
         task.setSassDir(new File(project.getBuildDir(), SASS_OUTPUT_DIR));
         task.dependsOn(prepareSassTask);
     }
 
-    private void configureWarTask(Project project) {
+    private void createWarTask(Project project) {
         Task sassToCssTask = project.getTasks().getByName(SASS_TO_CSS_TASK_NAME);
 
         War warTask = (War) project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
