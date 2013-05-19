@@ -124,6 +124,8 @@ public class BuildService extends DefaultTask {
                     .setLocation(dep);
         }
 
+        antClassPath.createPathElement().setLocation(getResourceDir()); //Needed or portlet-model-hints.xml will be overwritten
+
         javaTask.setProject(antProject);
         javaTask.setClasspath(antClassPath);
 
