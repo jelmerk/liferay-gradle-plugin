@@ -24,13 +24,7 @@ import org.apache.tools.ant.taskdefs.Mkdir;
 import org.apache.tools.ant.types.Path;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.TaskExecutionException;
+import org.gradle.api.tasks.*;
 
 import java.io.File;
 
@@ -297,6 +291,7 @@ public class BuildService extends DefaultTask {
      * @return the file that points to the folder where the generated service implementation source files will be
      *         written to
      */
+    @InputDirectory
     @OutputDirectory
     public File getImplSrcDir() {
         return implSrcDir;
@@ -340,6 +335,7 @@ public class BuildService extends DefaultTask {
      *
      * @return the file that points to the folder where the generated resource files will be written to
      */
+    @InputDirectory
     @OutputDirectory
     public File getResourceDir() {
         return resourceDir;
