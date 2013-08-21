@@ -1,0 +1,31 @@
+apply plugin: 'war'
+apply plugin: 'liferay-theme'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'com.github.jelmerk', name: 'liferay-plugin', version: '0.1.0-SNAPSHOT'
+    }
+}
+
+
+theme {
+    parentThemeName = "classic"
+}
+
+liferay {
+    appServerDirName = liferayHome
+}

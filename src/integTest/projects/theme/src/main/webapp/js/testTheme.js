@@ -1,0 +1,1 @@
+// if this file exists in the built theme the merge is working
