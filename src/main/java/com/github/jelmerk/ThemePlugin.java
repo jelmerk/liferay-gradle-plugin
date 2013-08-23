@@ -21,6 +21,7 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.WarPlugin;
@@ -83,6 +84,8 @@ public class ThemePlugin implements Plugin<Project> {
         MergeTheme mergeTheme = (MergeTheme) project.getTasks().getByName(MERGE_THEME_TASK_NAME);
 
         War warTask = (War) project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
+
+        warTask.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE);
 
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("dir", mergeTheme.getOutputDir());

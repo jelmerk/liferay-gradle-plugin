@@ -18,6 +18,7 @@ package com.github.jelmerk;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.testng.Assert;
 
 import java.io.File;
 
@@ -48,7 +49,13 @@ public class ThemePluginIntegrationTest extends AbstractPluginIntegrationTest {
         assertThatHasZipEntry(createdWarFile, "WEB-INF/liferay-look-and-feel.xml");
         assertThatHasZipEntry(createdWarFile, "templates/navigation.vm");
         assertThatHasZipEntry(createdWarFile, "templates/init_custom.vm");
+        assertThatHasZipEntry(createdWarFile, "templates/portal_normal.vm");
         assertThatHasZipEntry(createdWarFile, "css/.sass-cache/main.css");
+
+        final String portalNormalArchiveContent = readZipEntryToUtf8String(createdWarFile, "templates/portal_normal.vm");
+
+        Assert.assertEquals(portalNormalArchiveContent,"#If this line exists merge the parent theme is merged in the right way",
+                "Theme local files are not preserved in merge!");
     }
 
 }

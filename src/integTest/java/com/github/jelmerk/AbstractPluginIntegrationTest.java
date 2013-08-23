@@ -17,14 +17,13 @@
 package com.github.jelmerk;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
-import junit.framework.Assert;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -78,6 +77,35 @@ public abstract class AbstractPluginIntegrationTest {
         }
         return false;
     }
+
+    protected String readZipEntryToUtf8String(File file, String path) throws IOException {
+        ZipInputStream in = new ZipInputStream(new FileInputStream(file));
+
+        ZipEntry entry;
+        while ((entry = in.getNextEntry()) != null) {
+            if (path.equals(entry.getName())) {
+                return readZipEntryToUtf8String(in);
+            }
+        }
+
+        return null;
+    }
+
+    private String readZipEntryToUtf8String(ZipInputStream in) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+        int data = 0;
+        while( ( data = in.read() ) != - 1 )
+        {
+            output.write( data );
+        }
+
+        // The ZipEntry is extracted in the output
+        output.close();
+
+        return new String(output.toByteArray(),"UTF-8");
+    }
+
 
     protected void assertThatHasZipEntry(File file, String path) throws IOException {
         assertTrue(String.format("The entry '%s' does not exixts in the file",path),hasZipEntry(file, path));
