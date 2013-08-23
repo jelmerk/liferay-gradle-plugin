@@ -24,17 +24,17 @@ import java.io.File;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Integration test for testing the portlet plugin.
+ * Integration test for testing the theme plugin.
  *
  * @author Jelmer Kuperus
  */
-public class PortletPluginIntegrationTest extends AbstractPluginIntegrationTest {
+public class ThemePluginIntegrationTest extends AbstractPluginIntegrationTest {
 
     private File projectDir;
 
     @Before
     public void setup() {
-        projectDir = getProjectDir("portlet");
+        projectDir = getProjectDir("theme");
     }
 
     @Test
@@ -42,10 +42,11 @@ public class PortletPluginIntegrationTest extends AbstractPluginIntegrationTest 
 
         runBuild(projectDir, "clean", "war");
 
-        File createdWarFile = new File(projectDir, "build/libs/portlet.war");
+        File createdWarFile = new File(projectDir, "build/libs/theme.war");
 
         assertTrue(createdWarFile.exists());
-        assertThatHasZipEntry(createdWarFile, "index.jsp");
+        assertThatHasZipEntry(createdWarFile, "WEB-INF/liferay-look-and-feel.xml");
+        assertThatHasZipEntry(createdWarFile, "templates/navigation.vm");
         assertThatHasZipEntry(createdWarFile, "css/.sass-cache/main.css");
     }
 

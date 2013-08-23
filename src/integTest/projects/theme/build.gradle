@@ -6,21 +6,11 @@ repositories {
     mavenCentral()
 }
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
-
 buildscript {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
     dependencies {
-        classpath group: 'com.github.jelmerk', name: 'liferay-plugin', version: '0.1.0-SNAPSHOT'
+        classpath files("${buildDir}/../../../libs/liferay-plugin-0.1.0-SNAPSHOT.jar")
     }
 }
-
 
 theme {
     parentThemeName = "classic"

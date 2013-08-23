@@ -17,7 +17,9 @@
 package com.github.jelmerk;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
+import junit.framework.Assert;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
@@ -75,5 +77,9 @@ public abstract class AbstractPluginIntegrationTest {
             }
         }
         return false;
+    }
+
+    protected void assertThatHasZipEntry(File file, String path) throws IOException {
+        assertTrue(String.format("The entry '%s' does not exixts in the file",path),hasZipEntry(file, path));
     }
 }

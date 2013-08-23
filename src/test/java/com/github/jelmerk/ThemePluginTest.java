@@ -13,40 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.github.jelmerk;
 
+import org.gradle.api.Project;
+import org.gradle.api.plugins.WarPlugin;
+import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.File;
 
 import static org.junit.Assert.assertTrue;
 
 /**
- * Integration test for testing the portlet plugin.
- *
- * @author Jelmer Kuperus
+ * @author Alessandro Palumbo
  */
-public class PortletPluginIntegrationTest extends AbstractPluginIntegrationTest {
+public class ThemePluginTest {
 
-    private File projectDir;
+    Project project;
+    ThemePlugin plugin;
 
     @Before
     public void setup() {
-        projectDir = getProjectDir("portlet");
+        project = ProjectBuilder.builder().build();
+        plugin = new ThemePlugin();
     }
 
     @Test
-    public void testIntegration() throws Exception {
+    public void testAppliedBasePlugins() {
+        plugin.apply(project);
 
-        runBuild(projectDir, "clean", "war");
+        assertTrue(project.getPlugins().hasPlugin(LiferayBasePlugin.class));
+        assertTrue(project.getPlugins().hasPlugin(WarPlugin.class));
+    }
 
-        File createdWarFile = new File(projectDir, "build/libs/portlet.war");
-
-        assertTrue(createdWarFile.exists());
-        assertThatHasZipEntry(createdWarFile, "index.jsp");
-        assertThatHasZipEntry(createdWarFile, "css/.sass-cache/main.css");
+    @Test
+    public void testAddedExtension() {
+        plugin.apply(project);
+        assertTrue(project.getExtensions().getByName(ThemePlugin.THEME_EXTENSION_NAME)
+                instanceof ThemePluginExtension);
     }
 
 }

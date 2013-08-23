@@ -30,7 +30,7 @@ import java.io.File;
 
 /**
  * Implementation of {@link Plugin} that adds tasks and configuration for creating Liferay themes.
- * When you configure this plugin {@link LiferayBasePlugin} is configured as well
+ * When you configure this plugin {@link LiferayBasePlugin} and {@link SassCompilationPluginDelegate} is configured as well
  *
  * @author Jelmer Kuperus
  */
@@ -51,6 +51,9 @@ public class ThemePlugin implements Plugin<Project> {
      */
     public static final String THEME_EXTENSION_NAME = "theme";
 
+
+    public static final String MERGE_TASK_PARENT_SOURCE_DIR = "parentThemeContent";
+
     /**
      * {@inheritDoc}
      */
@@ -58,20 +61,16 @@ public class ThemePlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
 
-        createThemeExtension(project);
+        SassCompilationPluginDelegate sassCompilationPluginDelegate = new SassCompilationPluginDelegate();
+        sassCompilationPluginDelegate.doApply(project);
 
-        configureWar(project);
+        createThemeExtension(project);
 
         configureMergeTemplateTaskDefaults(project);
         createMergeTemplateTask(project);
 
         configureBuildThumbnailTaskDefaults(project);
         createBuildThumbnailTask(project);
-    }
-
-    private void configureWar(Project project) {
-        project.getConvention().getPlugin(WarPluginConvention.class)
-            .setWebAppDirName(new File(project.getBuildDir(), "webapp").getAbsolutePath());
     }
 
     private void createThemeExtension(Project project) {
@@ -88,10 +87,16 @@ public class ThemePlugin implements Plugin<Project> {
 
         ThemePluginExtension themeExtension = project.getExtensions().getByType(ThemePluginExtension.class);
 
-        MergeTheme task = project.getTasks().create(MERGE_THEME_TASK_NAME, MergeTheme.class);
-        task.setThemeType(themeExtension.getThemeType());
+        final Task sassToCss = project.getTasks().getByPath(SassCompilationPluginDelegate.SASS_TO_CSS_TASK_NAME);
 
-        project.getGradle().addBuildListener(new MergeTemplateTaskBuildListener(task, themeExtension, warConvention));
+        final MergeTheme mergeThemeTask = project.getTasks().create(MERGE_THEME_TASK_NAME, MergeTheme.class);
+        mergeThemeTask.setThemeType(themeExtension.getThemeType());
+        sassToCss.dependsOn(mergeThemeTask);
+
+        Task warTask = project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
+        warTask.dependsOn(mergeThemeTask);
+
+        project.getGradle().addBuildListener(new MergeTemplateTaskBuildListener(mergeThemeTask, themeExtension, warConvention));
     }
 
     private void configureBuildThumbnailTaskDefaults(Project project) {
@@ -199,13 +204,6 @@ public class ThemePlugin implements Plugin<Project> {
                 task.setParentThemeProjectName(themeExtension.getParentThemeProjectName());
             }
 
-            if (task.getDiffsDir() == null) {
-                task.setDiffsDir(themeExtension.getDiffsDir());
-            }
-
-            if (task.getOutputDir() == null) {
-                task.setOutputDir(warConvention.getWebAppDir());
-            }
         }
     }
 
@@ -236,6 +234,8 @@ public class ThemePlugin implements Plugin<Project> {
                 if (mergeTheme.getAppServerPortalDir() == null) {
                     mergeTheme.setAppServerPortalDir(liferayExtension.getAppServerPortalDir());
                 }
+
+                mergeTheme.setOutputDir(new File(project.getBuildDir(),MERGE_TASK_PARENT_SOURCE_DIR));
             }
         }
     }

@@ -45,7 +45,6 @@ public class MergeTheme extends DefaultTask {
 
     private File appServerPortalDir;
 
-    private File diffsDir;
     private File outputDir;
 
     /**
@@ -63,7 +62,7 @@ public class MergeTheme extends DefaultTask {
         if (getParentThemeProjectName() != null) {
             copyProjectTheme();
         }
-        copyDiffs();
+
     }
 
     private void copyLiferayTheme() {
@@ -86,9 +85,7 @@ public class MergeTheme extends DefaultTask {
         copy(parentThemeOutputDir, null, "WEB-INF", getOutputDir());
     }
 
-    private void copyDiffs() {
-        copy(getDiffsDir(), null, null,  getOutputDir());
-    }
+
 
     private void copyUnstyledTheme() {
 
@@ -219,15 +216,6 @@ public class MergeTheme extends DefaultTask {
 
     public void setAppServerPortalDir(File appServerPortalDir) {
         this.appServerPortalDir = appServerPortalDir;
-    }
-
-    @InputDirectory
-    public File getDiffsDir() {
-        return diffsDir;
-    }
-
-    public void setDiffsDir(File diffsDir) {
-        this.diffsDir = diffsDir;
     }
 
     @OutputDirectory

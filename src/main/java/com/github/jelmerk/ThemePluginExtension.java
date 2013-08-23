@@ -132,4 +132,5 @@ public class ThemePluginExtension {
     public File getDiffsDir() {
         return project.file(diffsDirName);
     }
+
 }

@@ -23,6 +23,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
@@ -80,7 +81,7 @@ public class SassToCss extends DefaultTask {
      *
      * @return a file pointing to the folder that holds the sass files
      */
-    @InputDirectory
+    @OutputDirectory
     public File getSassDir() {
         return sassDir;
     }
