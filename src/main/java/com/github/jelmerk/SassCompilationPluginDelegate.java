@@ -18,7 +18,6 @@ package com.github.jelmerk;
 
 import org.gradle.BuildAdapter;
 import org.gradle.api.Action;
-import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -70,7 +69,7 @@ public class SassCompilationPluginDelegate {
 
         createCopySassFilesTask(project);
         createSassToCssTask(project);
-        addSassTaskDependencyToWarTask(project);
+        addSassCompilationToWarTask(project);
     }
 
     private void createSassConfiguration(Project project) {
@@ -98,7 +97,7 @@ public class SassCompilationPluginDelegate {
         task.dependsOn(prepareSassTask);
     }
 
-    private void addSassTaskDependencyToWarTask(Project project) {
+    private void addSassCompilationToWarTask(Project project) {
         Task sassToCssTask = project.getTasks().getByName(SASS_TO_CSS_TASK_NAME);
 
         War warTask = (War) project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);

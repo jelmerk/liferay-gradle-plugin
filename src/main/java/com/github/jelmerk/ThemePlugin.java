@@ -21,12 +21,16 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.plugins.WarPluginConvention;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.bundling.War;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Implementation of {@link Plugin} that adds tasks and configuration for creating Liferay themes.
@@ -71,6 +75,22 @@ public class ThemePlugin implements Plugin<Project> {
 
         configureBuildThumbnailTaskDefaults(project);
         createBuildThumbnailTask(project);
+
+        addThemeMergeToWarTask(project);
+    }
+
+    private void addThemeMergeToWarTask(Project project) {
+        MergeTheme mergeTheme = (MergeTheme) project.getTasks().getByName(MERGE_THEME_TASK_NAME);
+
+        War warTask = (War) project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
+
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("dir", mergeTheme.getOutputDir());
+        args.put("include", "**/*");
+
+        FileTree generatedSassCaches = project.fileTree(args);
+
+        warTask.from(generatedSassCaches);
     }
 
     private void createThemeExtension(Project project) {
@@ -91,6 +111,7 @@ public class ThemePlugin implements Plugin<Project> {
 
         final MergeTheme mergeThemeTask = project.getTasks().create(MERGE_THEME_TASK_NAME, MergeTheme.class);
         mergeThemeTask.setThemeType(themeExtension.getThemeType());
+        mergeThemeTask.setOutputDir(new File(project.getBuildDir(),MERGE_TASK_PARENT_SOURCE_DIR));
         sassToCss.dependsOn(mergeThemeTask);
 
         Task warTask = project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
@@ -234,8 +255,6 @@ public class ThemePlugin implements Plugin<Project> {
                 if (mergeTheme.getAppServerPortalDir() == null) {
                     mergeTheme.setAppServerPortalDir(liferayExtension.getAppServerPortalDir());
                 }
-
-                mergeTheme.setOutputDir(new File(project.getBuildDir(),MERGE_TASK_PARENT_SOURCE_DIR));
             }
         }
     }

@@ -47,6 +47,7 @@ public class ThemePluginIntegrationTest extends AbstractPluginIntegrationTest {
         assertTrue(createdWarFile.exists());
         assertThatHasZipEntry(createdWarFile, "WEB-INF/liferay-look-and-feel.xml");
         assertThatHasZipEntry(createdWarFile, "templates/navigation.vm");
+        assertThatHasZipEntry(createdWarFile, "templates/init_custom.vm");
         assertThatHasZipEntry(createdWarFile, "css/.sass-cache/main.css");
     }
 
