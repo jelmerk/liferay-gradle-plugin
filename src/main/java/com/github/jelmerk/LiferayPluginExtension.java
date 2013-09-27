@@ -44,6 +44,11 @@ public class LiferayPluginExtension {
 
     private String autoDeployDirName;
 
+    private String appServerType;
+    private String pluginType;
+    private String destDirName;
+    private String customPortletXML;
+
     /**
      * Constructs a new LiferayPluginExtension.
      *
@@ -143,6 +148,54 @@ public class LiferayPluginExtension {
      */
     public void setAutoDeployDirName(String autoDeployDirName) {
         this.autoDeployDirName = autoDeployDirName;
+    }
+
+    public String getAppServerType() {
+        if (appServerType != null) {
+            return appServerType;
+        }
+
+        return "tomcat";
+    }
+
+    public void setAppServerType(String appServerType) {
+        this.appServerType = appServerType;
+    }
+
+    public String getPluginType() {
+        if (pluginType != null) {
+            return pluginType;
+        }
+
+        return "portlet";
+    }
+
+    public void setPluginType(String pluginType) {
+        this.pluginType = pluginType;
+    }
+
+    public String getDestDirName() {
+        if (destDirName != null) {
+            return destDirName;
+        }
+
+        return (new File(project.getBuildDir(), "directdeploy")).getAbsolutePath();
+    }
+
+    public void setDestDirName(String destDirName) {
+        this.destDirName = destDirName;
+    }
+
+    public String getCustomPortletXML() {
+        if (customPortletXML != null) {
+            return customPortletXML;
+        }
+
+        return "false";
+    }
+
+    public void setCustomPortletXML(String customPortletXML) {
+        this.customPortletXML = customPortletXML;
     }
 
     /**
