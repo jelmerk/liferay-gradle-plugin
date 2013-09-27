@@ -46,6 +46,7 @@ public class LiferayBasePluginTest {
         project = ProjectBuilder.builder().build();
         gradle = (DefaultGradle) project.getGradle();
         plugin = new LiferayBasePlugin();
+        project.getExtensions().getByType(LiferayPluginExtension.class).setAppServerDirName("liferay_extension_dir");
     }
 
     @Test
