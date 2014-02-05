@@ -46,7 +46,6 @@ public class LiferayBasePluginTest {
         project = ProjectBuilder.builder().build();
         gradle = (DefaultGradle) project.getGradle();
         plugin = new LiferayBasePlugin();
-        project.getExtensions().getByType(LiferayPluginExtension.class).setAppServerDirName("liferay_extension_dir");
     }
 
     @Test
@@ -77,6 +76,7 @@ public class LiferayBasePluginTest {
 
         LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
         liferayExtension.setAutoDeployDirName("liferay_extension_dir");
+        liferayExtension.setAppServerDirName("appserver_dir");
 
         Deploy task = (Deploy) project.getTasks().getByName(LiferayBasePlugin.DEPLOY_TASK_NAME);
         gradle.getBuildListenerBroadcaster().projectsEvaluated(gradle);
@@ -92,6 +92,7 @@ public class LiferayBasePluginTest {
 
         LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
         liferayExtension.setAutoDeployDirName("liferay_extension_dir");
+        liferayExtension.setAppServerDirName("appserver_dir");
 
         Deploy task = (Deploy) project.getTasks().getByName(LiferayBasePlugin.DEPLOY_TASK_NAME);
         task.setAutoDeployDir(override);
@@ -104,6 +105,8 @@ public class LiferayBasePluginTest {
     @Test
     public void testWarFileDefault() {
         plugin.apply(project);
+
+        project.getExtensions().getByType(LiferayPluginExtension.class).setAppServerDirName("appserver_dir");
 
         War warTask = (War) project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
         Deploy task = (Deploy) project.getTasks().getByName(LiferayBasePlugin.DEPLOY_TASK_NAME);
@@ -118,6 +121,8 @@ public class LiferayBasePluginTest {
         File override = new File("override");
 
         plugin.apply(project);
+
+        project.getExtensions().getByType(LiferayPluginExtension.class).setAppServerDirName("appserver_dir");
 
         Deploy task = (Deploy) project.getTasks().getByName(LiferayBasePlugin.DEPLOY_TASK_NAME);
         task.setWarFile(override);

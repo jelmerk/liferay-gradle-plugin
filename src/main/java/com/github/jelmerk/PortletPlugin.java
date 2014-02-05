@@ -21,7 +21,7 @@ import org.gradle.api.Project;
 
 /**
  * Implementation of {@link Plugin} that adds tasks and configuration for creating Liferay portlets.
- * When you configure this plugin {@link LiferayBasePlugin} and  {@Link SassCompilationPluginDelegate} are configured as well.
+ * When you configure this plugin {@link LiferayBasePlugin} and  {@link SassCompilationPluginDelegate} are configured as well.
  *
  * @author Jelmer Kuperus
  */
