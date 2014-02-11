@@ -7,7 +7,7 @@ apply plugin: 'sonar'
 group = 'com.github.jelmerk'
 archivesBaseName = 'liferay-plugin'
 
-version = '1.0.2-SNAPSHOT'
+version = '1.0.2'
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 sourceCompatibility = 1.6
