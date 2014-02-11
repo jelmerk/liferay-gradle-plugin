@@ -156,7 +156,8 @@ task integTest(type: Test) {
     description = 'Runs the integration tests.'
     group = 'verification'
     jvmArgs "-javaagent:${configurations.jacoco.asPath}=destfile=${buildDir}/jacoco.integration,includes=com.github.jelmerk.*",
-            "-DintegTestProjectsDir=${buildDir}/integTestProjects"
+            "-DintegTestProjectsDir=${buildDir}/integTestProjects",
+            "-DpluginArtifactFile=${jar.archivePath}"
     dependsOn jar, copyIntegTestProjects
 }
 

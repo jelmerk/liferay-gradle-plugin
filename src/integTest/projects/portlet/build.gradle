@@ -7,7 +7,7 @@ repositories {
 
 buildscript {
     dependencies {
-        classpath files("${buildDir}/../../../libs/liferay-plugin-0.1.0-SNAPSHOT.jar")
+        classpath files(System.properties["pluginArtifactFile"])
     }
 }
 
