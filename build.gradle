@@ -6,11 +6,21 @@ apply plugin: 'sonar'
 
 group = 'com.github.jelmerk'
 archivesBaseName = 'liferay-plugin'
+
 version = '1.0.1-SNAPSHOT'
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
+
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+if (!hasProperty('sonatypeUsername')) {
+    ext.sonatypeUsername = ''
+}
+if (!hasProperty('sonatypePassword')) {
+    ext.sonatypePassword = ''
+}
 
 defaultTasks 'clean', 'test', 'integTest', 'install'
 
