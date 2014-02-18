@@ -38,6 +38,10 @@ public class PortletPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
+
+        LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
+        liferayExtension.setPluginType("portlet");
+
         SassCompilationPluginDelegate sassCompilationPluginDelegate = new SassCompilationPluginDelegate();
         sassCompilationPluginDelegate.doApply(project);
     }

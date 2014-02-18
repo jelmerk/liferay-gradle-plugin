@@ -66,6 +66,9 @@ public class ThemePlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
 
+        LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
+        liferayExtension.setPluginType("theme");
+
         SassCompilationPluginDelegate sassCompilationPluginDelegate = new SassCompilationPluginDelegate();
         sassCompilationPluginDelegate.doApply(project);
 
