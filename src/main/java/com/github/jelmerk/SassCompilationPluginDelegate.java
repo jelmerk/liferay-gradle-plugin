@@ -21,10 +21,11 @@ import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.FileTree;
+import org.gradle.api.file.*;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.plugins.WarPluginConvention;
+import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.bundling.War;
 
@@ -59,6 +60,16 @@ public class SassCompilationPluginDelegate {
      */
     public static final String SASS_CONFIGURATION_NAME = "sass";
 
+    /**
+     * The name of the task that copies the merged theme files in the build folder.
+     */
+    public static final String COPY_THEME_FILES_TASK_NAME = "copyThemeFiles";
+
+    /**
+     * The name of the task that copies the compiled css files from .sass-cache to the main directory.
+     */
+    public static final String COPY_CSS_FROM_CACHE_TASK_NAME = "copyCssFromCache";
+
     private static final String SASS_OUTPUT_DIR = "sass";
 
 
@@ -67,8 +78,10 @@ public class SassCompilationPluginDelegate {
 
         configureSassToCssTaskDefaults(project);
 
+        createCopyThemeFilesTask(project);
         createCopySassFilesTask(project);
         createSassToCssTask(project);
+        createCopyCssFromCacheTask(project);
         addSassCompilationToWarTask(project);
     }
 
@@ -82,11 +95,23 @@ public class SassCompilationPluginDelegate {
         project.getGradle().addBuildListener(new SassToCssTaskDefaultsBuildListener(project));
     }
 
+    private void createCopyThemeFilesTask(Project project) {
+        project.getTasks().create(COPY_THEME_FILES_TASK_NAME, Copy.class)
+                .from(new File(project.getBuildDir(), ThemePlugin.MERGE_TASK_PARENT_SOURCE_DIR))
+                .setIncludes(asList("**/*"))
+                .setExcludes(asList("**/.sass-cache/**/*"))
+                .into(new File(project.getBuildDir(), SASS_OUTPUT_DIR));
+    }
+
     private void createCopySassFilesTask(Project project) {
-        project.getTasks().create(COPY_SASS_FILES_TASK_NAME, Copy.class)
+        Task copyThemeCssFilesTask = project.getTasks().getByName(COPY_THEME_FILES_TASK_NAME);
+
+        AbstractCopyTask task = project.getTasks().create(COPY_SASS_FILES_TASK_NAME, Copy.class)
             .from(new WebAppDirCallable(project))
-            .setIncludes(asList("**/*.css"))
+            .setIncludes(asList("**/*"))
             .into(new File(project.getBuildDir(), SASS_OUTPUT_DIR));
+
+        task.dependsOn(copyThemeCssFilesTask);
     }
 
     private void createSassToCssTask(Project project) {
@@ -97,15 +122,39 @@ public class SassCompilationPluginDelegate {
         task.dependsOn(prepareSassTask);
     }
 
-    private void addSassCompilationToWarTask(Project project) {
+    private void createCopyCssFromCacheTask(Project project) {
         Task sassToCssTask = project.getTasks().getByName(SASS_TO_CSS_TASK_NAME);
 
+        AbstractCopyTask task = project.getTasks().create(COPY_CSS_FROM_CACHE_TASK_NAME, Copy.class)
+                .from(new File(project.getBuildDir(), SASS_OUTPUT_DIR))
+                .setIncludes(asList("**/.sass-cache/**/*"))
+                .eachFile(new Action<FileCopyDetails>() {
+                    @Override
+                    public void execute(FileCopyDetails fileCopyDetails) {
+                        RelativePath relativePath = fileCopyDetails.getRelativePath();
+                        RelativePath parentPath = relativePath.getParent();
+                        if (relativePath.isFile() &&
+                                parentPath.getLastName().equals(".sass-cache")) {
+                            parentPath = parentPath.replaceLastName(relativePath.getLastName());
+                            RelativePath updatedPath = RelativePath.parse(true, parentPath.getPathString());
+                            fileCopyDetails.setRelativePath(updatedPath);
+                        }
+                    }
+                })
+                .into(new File(project.getBuildDir(), SASS_OUTPUT_DIR));
+
+        task.dependsOn(sassToCssTask);
+    }
+
+    private void addSassCompilationToWarTask(Project project) {
+        Task copyCssFromCacheTask = project.getTasks().getByName(COPY_CSS_FROM_CACHE_TASK_NAME);
+
         War warTask = (War) project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
-        warTask.dependsOn(sassToCssTask);
+        warTask.dependsOn(copyCssFromCacheTask);
 
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("dir", new File(project.getBuildDir(), SASS_OUTPUT_DIR));
-        args.put("include", "**/.sass-cache/**/*");
+        args.put("include", "**/*");
 
         FileTree generatedSassCaches = project.fileTree(args);
 

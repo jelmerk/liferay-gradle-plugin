@@ -33,5 +33,8 @@ public class HookPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
+
+        LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
+        liferayExtension.setPluginType("hook");
     }
 }

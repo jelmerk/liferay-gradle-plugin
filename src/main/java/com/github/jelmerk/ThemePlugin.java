@@ -21,17 +21,12 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.file.DuplicatesStrategy;
-import org.gradle.api.file.FileTree;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.plugins.WarPlugin;
 import org.gradle.api.plugins.WarPluginConvention;
 import org.gradle.api.specs.Spec;
-import org.gradle.api.tasks.bundling.War;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Implementation of {@link Plugin} that adds tasks and configuration for creating Liferay themes.
@@ -66,6 +61,9 @@ public class ThemePlugin implements Plugin<Project> {
     public void apply(Project project) {
         project.getPlugins().apply(LiferayBasePlugin.class);
 
+        LiferayPluginExtension liferayExtension = project.getExtensions().getByType(LiferayPluginExtension.class);
+        liferayExtension.setPluginType("theme");
+
         SassCompilationPluginDelegate sassCompilationPluginDelegate = new SassCompilationPluginDelegate();
         sassCompilationPluginDelegate.doApply(project);
 
@@ -76,24 +74,6 @@ public class ThemePlugin implements Plugin<Project> {
 
         configureBuildThumbnailTaskDefaults(project);
         createBuildThumbnailTask(project);
-
-        addThemeMergeToWarTask(project);
-    }
-
-    private void addThemeMergeToWarTask(Project project) {
-        MergeTheme mergeTheme = (MergeTheme) project.getTasks().getByName(MERGE_THEME_TASK_NAME);
-
-        War warTask = (War) project.getTasks().getByName(WarPlugin.WAR_TASK_NAME);
-
-        warTask.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE);
-
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("dir", mergeTheme.getOutputDir());
-        args.put("include", "**/*");
-
-        FileTree generatedSassCaches = project.fileTree(args);
-
-        warTask.from(generatedSassCaches);
     }
 
     private void createThemeExtension(Project project) {

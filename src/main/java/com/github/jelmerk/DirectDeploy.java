@@ -55,8 +55,8 @@ public class DirectDeploy extends DefaultTask {
         SecurityManager currentSecurityManager = System.getSecurityManager();
 
         SecurityManager securityManager = new SecurityManager() {
-//            public void checkPermission(Permission permission) {
-//            }
+            public void checkPermission(Permission permission) {
+            }
             public void checkExit(int status) {
                 throw new SecurityException();
             }
@@ -108,7 +108,7 @@ public class DirectDeploy extends DefaultTask {
             deploy("com.liferay.portal.tools.deploy.PortletDeployer", classLoader, args);
         }
         catch (ReflectiveOperationException e)  {
-            logger.error("Unable to execute direct deploy portlet.\n {} due to {}.", e.getMessage(), e.getCause());
+            logger.error("Unable to execute direct deploy portlet", e);
         }
     }
 
@@ -122,7 +122,7 @@ public class DirectDeploy extends DefaultTask {
             deploy("com.liferay.portal.tools.deploy.HookDeployer", classLoader, args);
         }
         catch (ReflectiveOperationException e)  {
-            logger.error("Unable to execute direct deploy hook.\n {} due to {}.", e.getMessage(), e.getCause());
+            logger.error("Unable to execute direct deploy hook.", e);
         }
     }
 
@@ -141,7 +141,7 @@ public class DirectDeploy extends DefaultTask {
             deploy("com.liferay.portal.tools.deploy.ThemeDeployer", classLoader, args);
         }
         catch (ReflectiveOperationException e)  {
-            logger.error("Unable to execute direct deploy theme.\n {} due to {}.", e.getMessage(), e.getCause());
+            logger.error("Unable to execute direct deploy theme.", e);
         }
     }
 
@@ -168,10 +168,9 @@ public class DirectDeploy extends DefaultTask {
 
         System.setProperty("deployer.app.server.type", appServerType);
         System.setProperty("deployer.base.dir", (new File(project.getBuildDir(), "libs")).getAbsolutePath());
-        System.setProperty("deployer.dest.dir", (new File(appServerDir, "webapps")).getAbsolutePath());
+        System.setProperty("deployer.dest.dir", getDestDir().getAbsolutePath());
         System.setProperty("deployer.file.pattern", warFile.getName());
-        System.setProperty("deployer.unpack.war", "true");
-
+        System.setProperty("deployer.unpack.war", String.valueOf(true));
 
         if (pluginType.equals("portlet")) {
             deployPortlet();

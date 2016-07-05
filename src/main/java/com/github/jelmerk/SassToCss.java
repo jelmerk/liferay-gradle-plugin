@@ -69,7 +69,13 @@ public class SassToCss extends DefaultTask {
         javaTask.setNewenvironment(true);
 
         javaTask.createArg()
-                .setLine("sass.dir=" + getSassDir());
+                .setLine("sass.dir=" + "/");
+
+        javaTask.createArg()
+                .setLine("sass.docroot.dir=" + getSassDir());
+
+        javaTask.createArg()
+                .setLine("sass.portal.common.dir=" + new File(getAppServerPortalDir(), "/html/css/common"));
 
         javaTask.createJvmarg().setLine("-Dliferay.lib.portal.dir=" + new File(getAppServerPortalDir(), "WEB-INF/lib"));
 
